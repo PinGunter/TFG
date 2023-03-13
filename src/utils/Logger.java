@@ -4,6 +4,7 @@ public class Logger {
 
     private String agentName;
     private String fileName;
+
     private boolean writeToFile;
 
     public Logger(String fileName){
@@ -23,11 +24,20 @@ public class Logger {
         this.agentName = agentName;
     }
 
-    public void log(String msg){
+    private void log(String msg){
         if (writeToFile){
             // code to write to file :)
         }
-        String output = agentName + ": " + msg;
-        System.out.println(output);
+        System.out.println(msg);
+    }
+
+    public void info(String msg){
+        String output = "[INFO]" + "\t" + agentName + ": " + msg;
+        log(output);
+    }
+
+    public void error(String msg){
+        String output = "[ERROR]" + "\t" + agentName + ": " + msg;
+        log(output);
     }
 }

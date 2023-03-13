@@ -1,13 +1,19 @@
 package agents;
 
+import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import utils.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Base Class for our agents. It's heavily inspired by Luis Castillo's LARVABaseAgent
@@ -20,15 +26,42 @@ import java.util.Iterator;
 public class BaseAgent extends Agent {
     protected Logger logger;
     protected final long WAITANSWERMS = 5000;
+
+    public Behaviour defaultBehaviour;
+
     protected ACLMessage inbox, outbox;
 
     protected long ncycles;
+
+    protected boolean exit = false;
 
     @Override
     public void setup(){
         super.setup();
         logger = new Logger();
         logger.setAgentName(getLocalName());
+        this.setDefaultBehaviour();
+    }
+
+    private void setDefaultBehaviour() {
+        defaultBehaviour = new Behaviour() {
+            @Override
+            public void action() {
+                preExecute();
+                execute();
+                postExecute();
+                ncycles++;
+                if (exit){
+                    doDelete();
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return exit;
+            }
+        };
+        this.addBehaviour(defaultBehaviour);
     }
 
     public void execute(){}
@@ -78,11 +111,104 @@ public class BaseAgent extends Agent {
         return res;
     }
 
-    public boolean DFHasSErvice(String agentName, String service){
+    public boolean DFHasService(String agentName, String service){
         return DFGetAllProvidersOf(service).contains(service);
     }
 
-    public boolean DFSetMyServices(String [] services){
+    public boolean DFSetMyServices(List<String> services){
+        logger.info("Services registered" + services.toString());
+        if (this.DFGetAllServicesProvidedBy(getLocalName()).size() > 0){
+            DFRemoveAllMyServices();
+        }
+        return DFSetServices(getLocalName(), services);
+    }
 
+    public boolean DFAddMyServices(List<String> services){
+        List<String> previous;
+        logger.info("Removing services" + services.toString());
+        previous = DFGetAllServicesProvidedBy(getLocalName());
+        previous.removeAll(services);
+        return DFSetMyServices(previous);
+    }
+
+    public boolean DFRemoveMyServices(List<String> services){
+        List<String> previous;
+        logger.info("Removing services" + services.toString());
+        previous = DFGetAllServicesProvidedBy(getLocalName());
+        previous.removeAll(services);
+        return DFSetMyServices(previous);
+    }
+
+    public void DFRemoveAllMyServices(){
+        try{
+            DFService.deregister(this);
+        } catch (FIPAException e){
+            logger.error(e.getMessage());
+        }
+    }
+
+    private boolean DFSetServices(String agentName, List<String> services){
+        DFAgentDescription dfAgentDescription;
+        ServiceDescription serviceDescription;
+        boolean okay = false;
+
+        dfAgentDescription = new DFAgentDescription();
+        dfAgentDescription.setName(new AID(agentName, AID.ISLOCALNAME));
+
+        for (String s : services){
+            serviceDescription = new ServiceDescription();
+            serviceDescription.setName(s);
+            serviceDescription.setType(s);
+            dfAgentDescription.addServices(serviceDescription);
+        }
+        try{
+            DFService.register(this, dfAgentDescription);
+            okay = true;
+        } catch (FIPAException e){
+            logger.error(e.getMessage());
+        }
+        return okay;
+    }
+
+    private DFAgentDescription[] DFQueryAllServicesProvided(String agentName){
+        DFAgentDescription dfAgentDescription;
+        ServiceDescription serviceDescription;
+        DFAgentDescription services [] = new DFAgentDescription[0];
+
+        dfAgentDescription = new DFAgentDescription();
+        if (!agentName.equals("")){
+            dfAgentDescription.setName(new AID(agentName, AID.ISLOCALNAME));
+        }
+        serviceDescription = new ServiceDescription();
+        dfAgentDescription.addServices(serviceDescription);
+        SearchConstraints constraints = new SearchConstraints();
+        constraints.setMaxResults((long) -1);
+        try {
+            services = DFService.search(this, dfAgentDescription, constraints);
+        } catch (FIPAException e){
+            logger.error(e.getMessage());
+        }
+        return services;
+    }
+
+    private DFAgentDescription[] DFQueryAllProviders(String service){
+        DFAgentDescription dfAgentDescription;
+        ServiceDescription serviceDescription;
+        DFAgentDescription [] agents = new DFAgentDescription[0];
+        dfAgentDescription = new DFAgentDescription();
+        SearchConstraints constraints = new SearchConstraints();
+        constraints.setMaxResults((long) -1);
+        serviceDescription = new ServiceDescription();
+        if (!service.equals("")){
+            serviceDescription.setName(service);
+        }
+        dfAgentDescription.addServices(serviceDescription);
+        try {
+            agents = DFService.search(this, dfAgentDescription, constraints);
+        } catch (FIPAException e){
+            logger.error(e.getMessage());
+        }
+
+        return agents;
     }
 }
