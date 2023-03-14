@@ -14,18 +14,10 @@ public class Logger {
     private boolean writeToFile;
 
     public Logger(String fileName){
+        agentName = "anonymousAgent";
         if (fileName != "" && fileName != null){
-            this.fileName = fileName;
             writeToFile = true;
-            try {
-                FileWriter fw = new FileWriter(fileName, true);
-                BufferedWriter bw = new BufferedWriter(fw);
-                printWriter = new PrintWriter(bw);
-            } catch (IOException e){
-                this.fileName = "";
-                writeToFile = false;
-                error("Couldn't write to file " + fileName);
-            }
+            this.fileName = fileName;
         } else {
             this.fileName = "";
             writeToFile = false;
@@ -39,9 +31,25 @@ public class Logger {
         this.agentName = agentName;
     }
 
+    private boolean openFile(String fileName){
+        try {
+            FileWriter fw = new FileWriter(fileName, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            printWriter = new PrintWriter(bw);
+            return true;
+        } catch (IOException e){
+            this.fileName = "";
+            writeToFile = false;
+            error("Couldn't write to file " + fileName);
+            return false;
+        }
+    }
+
     private void log(String msg){
         if (writeToFile){
+            openFile(fileName);
             printWriter.println(msg);
+            printWriter.close();
         }
         System.out.println(msg);
     }
