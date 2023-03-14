@@ -14,6 +14,7 @@ import utils.Logger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Base Class for our agents. It's heavily inspired by Luis Castillo's LARVABaseAgent
@@ -41,6 +42,11 @@ public class BaseAgent extends Agent {
         logger = new Logger();
         logger.setAgentName(getLocalName());
         this.setDefaultBehaviour();
+    }
+
+    @Override
+    public void takeDown(){
+        super.takeDown();
     }
 
     private void setDefaultBehaviour() {
@@ -211,4 +217,27 @@ public class BaseAgent extends Agent {
 
         return agents;
     }
+
+    protected void logError (String msg) {
+        logger.error(msg);
+    }
+
+    protected void logInfo (String msg){
+        logger.info(msg);
+    }
+
+    protected String inputLine(String message) {
+        System.out.println("\n\n" + message + " ");
+        return new Scanner(System.in).nextLine();
+    }
+
+    protected boolean confirm (String message) {
+        String line = inputLine(message);
+        return line.length() == 0 || line.toUpperCase().charAt(0) == 'Y';
+    }
+    public void setExit (boolean exit) {
+        this.exit = exit;
+    }
+
+
 }
