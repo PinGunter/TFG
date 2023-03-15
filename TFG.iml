@@ -8,5 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jade" level="project" />
+    <orderEntry type="library" name="telegram.telegrambots" level="project" />
+    <orderEntry type="library" name="io.github.cdimascio.dotenv.java" level="project" />
   </component>
 </module>
