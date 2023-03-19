@@ -25,6 +25,7 @@ import java.util.Scanner;
  */
 
 public class BaseAgent extends Agent {
+    protected AgentStatus status;
     protected Logger logger;
     protected final long WAITANSWERMS = 5000;
 
@@ -53,10 +54,12 @@ public class BaseAgent extends Agent {
         defaultBehaviour = new Behaviour() {
             @Override
             public void action() {
-                preExecute();
-                execute();
-                postExecute();
-                ncycles++;
+                shield(() -> {
+                    preExecute();
+                    execute();
+                    postExecute();
+                    ncycles++;
+                });
                 if (exit){
                     doDelete();
                 }
@@ -68,6 +71,15 @@ public class BaseAgent extends Agent {
             }
         };
         this.addBehaviour(defaultBehaviour);
+    }
+
+    private void shield(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            exit = true;
+        }
     }
 
     public void execute(){}
