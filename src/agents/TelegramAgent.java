@@ -24,8 +24,9 @@ public class TelegramAgent extends NotifierAgent {
     // UI
     private InlineKeyboardButton returnMainMenuBtn;
     private InlineKeyboardMarkup mainMenu;
-    private InlineKeyboardMarkup keyboardM2;
-
+    private InlineKeyboardMarkup returnMainMenu;
+    EditMessageText newTxt;
+    EditMessageReplyMarkup newKb;
     // constants
     private final String welcomeMessage = "Hello and welcome to the Domotic Alerts Notifier " + Emoji.OWL;
 
@@ -61,7 +62,7 @@ public class TelegramAgent extends NotifierAgent {
 
         mainMenu = InlineKeyboardMarkup.builder()
                 .keyboardRow(List.of(showDevices)).keyboardRow(List.of(settings)).build();
-
+        returnMainMenu = InlineKeyboardMarkup.builder().keyboardRow(List.of(returnMainMenuBtn)).build();
 
         // pagination
         currentIndex = 0;
@@ -119,14 +120,30 @@ public class TelegramAgent extends NotifierAgent {
                 }
 
                 // stop JADE service
-                if (messageText.equals("/stopjade")) {
+                else if (messageText.equals("/stopjade")) {
                     goodbye(userId);
+                }
+
+                else if (messageText.startsWith("/setpagelimit")){
+                    try {
+                        int newLimit = Integer.parseInt(messageText.split(" ")[1]);
+                        if (newLimit < 4 || newLimit > 12 || newLimit % 2 != 0){
+                            bot.sendText(userId, Emoji.NERD + " The limit cannot be under 4 or over 12.\n" + Emoji.NERD + " Remember that it has to be even");
+                        } else {
+                            pageLimit = newLimit;
+                            bot.sendWithReplyMenu(userId, "Page limit changed to " + pageLimit, returnMainMenu);
+                        }
+                    } catch (Exception e) {
+                        bot.sendText(userId, "That wasn't a valid number.\n" + Emoji.NERD + " This command is used liked /setpagelimit <newLimit>");
+                    }
+                } else {
+                    notUnderstood(userId);
                 }
             } else if (!message.hasText()) {
                 notUnderstood(userId);
             } else {
                 if (messageText.equalsIgnoreCase("Hello")) {
-                    bot.sendText(userId, "Hello! " + Emoji.HELLO);
+                    bot.sendWithReplyMenu(userId, "Hello! " + Emoji.HELLO, returnMainMenu);
                 } else {
                     notUnderstood(userId);
                 }
@@ -137,15 +154,14 @@ public class TelegramAgent extends NotifierAgent {
     }
 
     private void processButtonPress(long chatId, int msgId, String data, String queryId) {
-        EditMessageText newTxt = EditMessageText.builder()
+        newTxt = EditMessageText.builder()
                 .chatId(chatId)
                 .messageId(msgId).text("").build();
 
-        EditMessageReplyMarkup newKb = EditMessageReplyMarkup.builder()
+        newKb = EditMessageReplyMarkup.builder()
                 .chatId(chatId).messageId(msgId).build();
 
 
-        // this looks really ugly :(
         if (data.startsWith("devices/")){
             handleDevices(data);
         } else if (data.startsWith("settings/")) {
@@ -155,69 +171,75 @@ public class TelegramAgent extends NotifierAgent {
             newKb.setReplyMarkup(mainMenu);
             currentIndex = 0;
         }
-            case "devices/" -> {
-                newTxt.setText("Showing Online devices");
-                List<InlineKeyboardButton> buttons = new ArrayList<>();
-                for (String device : onlineDevices) {
-                    buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-                }
-                InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-                newKb.setReplyMarkup(deviceKeyboard);
-            }
-            case "devices/backPagination" -> {
-                currentIndex = Math.max(0, currentIndex - 1);
-                List<InlineKeyboardButton> buttons = new ArrayList<>();
-                for (String device : onlineDevices) {
-                    buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-                }
-                InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-                newKb.setReplyMarkup(deviceKeyboard);
-            }
-            case "devices/nextPagination" -> {
-                currentIndex += 1;
-                List<InlineKeyboardButton> buttons = new ArrayList<>();
-                for (String device : onlineDevices) {
-                    buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-                }
-                InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-                newKb.setReplyMarkup(deviceKeyboard);
-            }
-            case "settings/" -> {
-                InlineKeyboardButton maxPerPageBtn = InlineKeyboardButton.builder().text("Set page limit").callbackData("settings/pageLimit").build();
-                InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.builder().keyboardRow(List.of(maxPerPageBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
-                newKb.setReplyMarkup(keyboardMarkup);
-            }
-            case "settings/pageLimit" -> {
-                newTxt.setText("Current page limit is " + pageLimit);
-                List<InlineKeyboardButton> buttons = new ArrayList<>();
-                for (int i=-2; i < 3; i++){
-                    if (i != 0){
-                        buttons.add(InlineKeyboardButton.builder().text(Integer.toString(i)).callbackData("settings/pageLimit/i").build());
-                    }
-                }
-            }
-
-        }
 
         AnswerCallbackQuery close = AnswerCallbackQuery.builder()
                 .callbackQueryId(queryId).build();
 
         bot.myExecute(close);
-        bot.myExecute(newTxt);
+        if (!newTxt.getText().isEmpty()) {
+            bot.myExecute(newTxt);
+        }
         bot.myExecute(newKb);
-
-
     }
+
+    // this looks really ugly :(
 
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
 
+        // the root
+        if (items.size() == 1) {
+            newTxt.setText("Showing Online devices");
+            List<InlineKeyboardButton> buttons = new ArrayList<>();
+            for (String device : onlineDevices) {
+                buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
+            }
+            InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
+            newKb.setReplyMarkup(deviceKeyboard);
+        } else {
+            // this looks really ugly :(
+            switch (items.get(1)) {
+                case "backPagination" -> {
+                    currentIndex = Math.max(0, currentIndex - 1);
+                    List<InlineKeyboardButton> buttons = new ArrayList<>();
+                    for (String device : onlineDevices) {
+                        buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
+                    }
+                    InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
+                    newKb.setReplyMarkup(deviceKeyboard);
+                }
+                case "nextPagination" -> {
+                    currentIndex += 1;
+                    List<InlineKeyboardButton> buttons = new ArrayList<>();
+                    for (String device : onlineDevices) {
+                        buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
+                    }
+                    InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
+                    newKb.setReplyMarkup(deviceKeyboard);
+                }
+            }
+        }
+
 
     }
+    // this looks really ugly :(
 
     private void handleSettings(String path){
         List<String> items = List.of(path.split("/"));
-
+        // the root
+        if (items.size() == 1) {
+            InlineKeyboardButton maxPerPageBtn = InlineKeyboardButton.builder().text("Page limit").callbackData("settings/pageLimit").build();
+            InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.builder().keyboardRow(List.of(maxPerPageBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
+            newKb.setReplyMarkup(keyboardMarkup);
+        } else {
+            switch (items.get(1)) {
+                case "pageLimit" ->{
+                    // ideally would be set using buttons, but it's too complex
+                    newTxt.setText("Current page limit is " + pageLimit +  "\n" +Emoji.NERD + Emoji.FINGER_UP +  "Change it with /setpagelimit <newLimit>");
+                    newKb.setReplyMarkup(returnMainMenu);
+                }
+            }
+        }
 
     }
 

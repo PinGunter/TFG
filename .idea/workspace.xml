@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/agents/AgentStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/Emoji.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/FirstAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/FirstAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/TelegramAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -118,7 +114,7 @@
       <workItem from="1678897633130" duration="4811000" />
       <workItem from="1678964414468" duration="2463000" />
       <workItem from="1678967159300" duration="308000" />
-      <workItem from="1679156940274" duration="19387000" />
+      <workItem from="1679156940274" duration="21291000" />
     </task>
     <servers />
   </component>
