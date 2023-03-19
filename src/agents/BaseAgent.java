@@ -25,6 +25,7 @@ import java.util.Scanner;
  */
 
 public class BaseAgent extends Agent {
+    protected AgentStatus status;
     protected Logger logger;
     protected final long WAITANSWERMS = 5000;
 

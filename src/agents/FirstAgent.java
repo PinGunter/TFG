@@ -10,7 +10,6 @@ public class FirstAgent extends BaseAgent{
         super.setup();
     }
 
-    //TODO maybe add shielding
 
 
 }

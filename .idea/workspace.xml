@@ -5,14 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/agents/NotifierAgent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/agents/TelegramAgent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env.template" beforeDir="false" afterPath="$PROJECT_DIR$/.env.template" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/agents/AgentStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/Emoji.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TFG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/TFG.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/FirstAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/FirstAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/TelegramAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +21,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
@@ -57,7 +56,7 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -116,7 +115,10 @@
       <workItem from="1678746020635" duration="616000" />
       <workItem from="1678818584612" duration="4115000" />
       <workItem from="1678880994788" duration="1782000" />
-      <workItem from="1678897633130" duration="4657000" />
+      <workItem from="1678897633130" duration="4811000" />
+      <workItem from="1678964414468" duration="2463000" />
+      <workItem from="1678967159300" duration="308000" />
+      <workItem from="1679156940274" duration="19387000" />
     </task>
     <servers />
   </component>
