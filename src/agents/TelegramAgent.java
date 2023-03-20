@@ -1,5 +1,7 @@
 package agents;
 
+import jade.core.AID;
+import jade.lang.acl.ACLMessage;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -78,18 +80,40 @@ public class TelegramAgent extends NotifierAgent {
     public void execute() {
         switch (status) {
             case LOGIN -> status = login();
-            case RUNNING -> status = running();
+            case IDLE -> status = running();
             case LOGOUT -> status = logout();
             case END -> exit = true;
         }
     }
 
+    // checks the DF for the hubAgent
     public AgentStatus login() {
-        return AgentStatus.RUNNING;
+        this.DFAddMyServices(List.of("NOTIFIER", "TELEGRAM"));
+        List<String> hubProvider = DFGetAllProvidersOf("HUB");
+        if (!hubProvider.isEmpty()){
+            hub = hubProvider.get(0);
+        }
+        ACLMessage helloHub = new ACLMessage();
+        helloHub.addReceiver(new AID(hub, AID.ISLOCALNAME));
+        helloHub.setContent("Hello");
+        helloHub.setPerformative(ACLMessage.REQUEST);
+        helloHub.setInReplyTo("helloTelegram");
+        sendMsg(helloHub);
+
+        logger.info("Waiting for hub");
+        helloHub = blockingReceive();
+        if (helloHub != null){
+            if (helloHub.getPerformative() == ACLMessage.INFORM){
+                logger.info("Greeted Hub");
+                return AgentStatus.IDLE;
+            }
+        }
+
+        return  AgentStatus.LOGIN;
     }
 
     public AgentStatus running() {
-        return logout ? AgentStatus.LOGOUT : AgentStatus.RUNNING;
+        return logout ? AgentStatus.LOGOUT : AgentStatus.IDLE;
     }
 
     public AgentStatus logout() {
@@ -170,6 +194,8 @@ public class TelegramAgent extends NotifierAgent {
             newTxt.setText(welcomeMessage);
             newKb.setReplyMarkup(mainMenu);
             currentIndex = 0;
+        } else {
+            logger.error("Unknown callback data: " + data);
         }
 
         AnswerCallbackQuery close = AnswerCallbackQuery.builder()
@@ -186,37 +212,24 @@ public class TelegramAgent extends NotifierAgent {
 
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
-
         // the root
         if (items.size() == 1) {
             newTxt.setText("Showing Online devices");
-            List<InlineKeyboardButton> buttons = new ArrayList<>();
-            for (String device : onlineDevices) {
-                buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-            }
-            InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-            newKb.setReplyMarkup(deviceKeyboard);
+            showDevicePages();
         } else {
             // this looks really ugly :(
-            switch (items.get(1)) {
-                case "backPagination" -> {
-                    currentIndex = Math.max(0, currentIndex - 1);
-                    List<InlineKeyboardButton> buttons = new ArrayList<>();
-                    for (String device : onlineDevices) {
-                        buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-                    }
-                    InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-                    newKb.setReplyMarkup(deviceKeyboard);
-                }
-                case "nextPagination" -> {
-                    currentIndex += 1;
-                    List<InlineKeyboardButton> buttons = new ArrayList<>();
-                    for (String device : onlineDevices) {
-                        buttons.add(InlineKeyboardButton.builder().text(device).callbackData(device).build());
-                    }
-                    InlineKeyboardMarkup deviceKeyboard = makeButtonList(buttons, buttons.size() > pageLimit, currentIndex);
-                    newKb.setReplyMarkup(deviceKeyboard);
-                }
+            if (items.get(1).equals("backPagination")) {
+                currentIndex = Math.max(0, currentIndex - 1);
+                showDevicePages();
+
+            } else if (items.get(1).equals("nextPagination")) {
+                currentIndex += 1;
+                showDevicePages();
+
+            } else if (onlineDevices.contains(items.get(1))){
+                sendHub(ACLMessage.REQUEST, "button pressed", items.get(1));
+                newKb.setReplyMarkup(returnMainMenu);
+                newTxt.setText("Sending msg to " + items.get(1));
             }
         }
 
@@ -254,7 +267,11 @@ public class TelegramAgent extends NotifierAgent {
         logout = true;
     }
 
-    private InlineKeyboardMarkup makeButtonList(List<InlineKeyboardButton> buttons, boolean usesPagination, int currentPage) {
+    private InlineKeyboardMarkup makeButtonList(List<String> devices, boolean usesPagination, int currentPage) {
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+        for (String device : devices) {
+            buttons.add(InlineKeyboardButton.builder().text(device).callbackData("devices/"+device).build());
+        }
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardBuilder = InlineKeyboardMarkup.builder();
 
         if (buttons.size() > 0) {
@@ -289,4 +306,17 @@ public class TelegramAgent extends NotifierAgent {
         return keyboardBuilder.build();
     }
 
+    private void showDevicePages(){
+        InlineKeyboardMarkup deviceKeyboard = makeButtonList(onlineDevices, onlineDevices.size() > pageLimit, currentIndex);
+        newKb.setReplyMarkup(deviceKeyboard);
+    }
+
+    public void sendHub(int performative, String content, String device){
+        ACLMessage msg = new ACLMessage();
+        msg.setSender(new AID(getLocalName(), AID.ISLOCALNAME));
+        msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
+        msg.setContent("COMMAND "+ content + " | " + device);
+        msg.setPerformative(ACLMessage.REQUEST);
+        sendMsg(msg);
+    }
 }

@@ -145,7 +145,7 @@ public class BaseAgent extends Agent {
         List<String> previous;
         logger.info("Removing services" + services.toString());
         previous = DFGetAllServicesProvidedBy(getLocalName());
-        previous.removeAll(services);
+        previous.addAll(services);
         return DFSetMyServices(previous);
     }
 
@@ -251,5 +251,19 @@ public class BaseAgent extends Agent {
         this.exit = exit;
     }
 
+    public void sendMsg(ACLMessage msg) {
+        logger.info("SENT: " +
+                ACLMessage.getPerformative(msg.getPerformative()) + " || "  +
+                msg.getContent() + " || Reply to: " + msg.getInReplyTo());        send(msg);
+    }
 
+    public ACLMessage receiveMsg(){
+        ACLMessage msg = receive();
+        if (msg != null){
+            logger.info("RECEIVED: " +
+                    ACLMessage.getPerformative(msg.getPerformative()) + " || "  +
+                    msg.getContent() + " || Reply to: " + msg.getInReplyTo());
+        }
+        return msg;
+    }
 }
