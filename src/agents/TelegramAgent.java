@@ -88,28 +88,11 @@ public class TelegramAgent extends NotifierAgent {
 
     // checks the DF for the hubAgent
     public AgentStatus login() {
-        this.DFAddMyServices(List.of("NOTIFIER", "TELEGRAM"));
-        List<String> hubProvider = DFGetAllProvidersOf("HUB");
-        if (!hubProvider.isEmpty()){
-            hub = hubProvider.get(0);
+        if (isFirstTime) {
+            this.DFAddMyServices(List.of("NOTIFIER", "TELEGRAM"));
+            isFirstTime = false;
         }
-        ACLMessage helloHub = new ACLMessage();
-        helloHub.addReceiver(new AID(hub, AID.ISLOCALNAME));
-        helloHub.setContent("Hello");
-        helloHub.setPerformative(ACLMessage.REQUEST);
-        helloHub.setInReplyTo("helloTelegram");
-        sendMsg(helloHub);
-
-        logger.info("Waiting for hub");
-        helloHub = blockingReceive();
-        if (helloHub != null){
-            if (helloHub.getPerformative() == ACLMessage.INFORM){
-                logger.info("Greeted Hub");
-                return AgentStatus.IDLE;
-            }
-        }
-
-        return  AgentStatus.LOGIN;
+        return this.lookForHub("NOTIFIER-LOGIN");
     }
 
     public AgentStatus running() {
@@ -146,12 +129,10 @@ public class TelegramAgent extends NotifierAgent {
                 // stop JADE service
                 else if (messageText.equals("/stopjade")) {
                     goodbye(userId);
-                }
-
-                else if (messageText.startsWith("/setpagelimit")){
+                } else if (messageText.startsWith("/setpagelimit")) {
                     try {
                         int newLimit = Integer.parseInt(messageText.split(" ")[1]);
-                        if (newLimit < 4 || newLimit > 12 || newLimit % 2 != 0){
+                        if (newLimit < 4 || newLimit > 12 || newLimit % 2 != 0) {
                             bot.sendText(userId, Emoji.NERD + " The limit cannot be under 4 or over 12.\n" + Emoji.NERD + " Remember that it has to be even");
                         } else {
                             pageLimit = newLimit;
@@ -186,7 +167,7 @@ public class TelegramAgent extends NotifierAgent {
                 .chatId(chatId).messageId(msgId).build();
 
 
-        if (data.startsWith("devices/")){
+        if (data.startsWith("devices/")) {
             handleDevices(data);
         } else if (data.startsWith("settings/")) {
             handleSettings(data);
@@ -226,8 +207,8 @@ public class TelegramAgent extends NotifierAgent {
                 currentIndex += 1;
                 showDevicePages();
 
-            } else if (onlineDevices.contains(items.get(1))){
-                sendHub(ACLMessage.REQUEST, "button pressed", items.get(1));
+            } else if (onlineDevices.contains(items.get(1))) {
+                sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), "");
                 newKb.setReplyMarkup(returnMainMenu);
                 newTxt.setText("Sending msg to " + items.get(1));
             }
@@ -237,7 +218,7 @@ public class TelegramAgent extends NotifierAgent {
     }
     // this looks really ugly :(
 
-    private void handleSettings(String path){
+    private void handleSettings(String path) {
         List<String> items = List.of(path.split("/"));
         // the root
         if (items.size() == 1) {
@@ -246,9 +227,9 @@ public class TelegramAgent extends NotifierAgent {
             newKb.setReplyMarkup(keyboardMarkup);
         } else {
             switch (items.get(1)) {
-                case "pageLimit" ->{
+                case "pageLimit" -> {
                     // ideally would be set using buttons, but it's too complex
-                    newTxt.setText("Current page limit is " + pageLimit +  "\n" +Emoji.NERD + Emoji.FINGER_UP +  "Change it with /setpagelimit <newLimit>");
+                    newTxt.setText("Current page limit is " + pageLimit + "\n" + Emoji.NERD + Emoji.FINGER_UP + "Change it with /setpagelimit <newLimit>");
                     newKb.setReplyMarkup(returnMainMenu);
                 }
             }
@@ -270,13 +251,13 @@ public class TelegramAgent extends NotifierAgent {
     private InlineKeyboardMarkup makeButtonList(List<String> devices, boolean usesPagination, int currentPage) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (String device : devices) {
-            buttons.add(InlineKeyboardButton.builder().text(device).callbackData("devices/"+device).build());
+            buttons.add(InlineKeyboardButton.builder().text(device).callbackData("devices/" + device).build());
         }
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardBuilder = InlineKeyboardMarkup.builder();
 
         if (buttons.size() > 0) {
 
-            int maxPage = usesPagination ? Math.min(currentPage* pageLimit + pageLimit, buttons.size()) : buttons.size();
+            int maxPage = usesPagination ? Math.min(currentPage * pageLimit + pageLimit, buttons.size()) : buttons.size();
 
             for (int i = currentPage * pageLimit; i < maxPage && maxPage <= buttons.size(); i += 2) {
                 if (i < buttons.size() - 1) {
@@ -306,17 +287,32 @@ public class TelegramAgent extends NotifierAgent {
         return keyboardBuilder.build();
     }
 
-    private void showDevicePages(){
+    private void showDevicePages() {
         InlineKeyboardMarkup deviceKeyboard = makeButtonList(onlineDevices, onlineDevices.size() > pageLimit, currentIndex);
         newKb.setReplyMarkup(deviceKeyboard);
     }
 
-    public void sendHub(int performative, String content, String device){
+    public void sendHub(int performative, String content, String device, String protocol) {
         ACLMessage msg = new ACLMessage();
         msg.setSender(new AID(getLocalName(), AID.ISLOCALNAME));
         msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
-        msg.setContent("COMMAND "+ content + " | " + device);
+        msg.setContent(content + " | " + device);
+        msg.setProtocol(protocol);
         msg.setPerformative(ACLMessage.REQUEST);
         sendMsg(msg);
     }
+
+
+//    public List<String> connectedDevices() {
+//        int delay = 10 * 1000;
+//        String protocol = "ONLINE-DEVICES";
+//        sendHub(ACLMessage.QUERY_REF, "", "", protocol);
+//        ACLMessage response = blockingReceive(delay);
+//        if (response != null) {
+//            if (response.getSender().getLocalName().equals(hub) && response.getProtocol().equals(protocol)) {
+//
+//            }
+//        }
+//
+//    }
 }
