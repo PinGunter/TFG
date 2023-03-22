@@ -26,9 +26,9 @@ public class HubAgent extends BaseAgent {
     private HashMap<String, AID> emergencies; // key-value with the emergency and the aid of the device that sent it
     private HashMap<String, Boolean> emergencyStatus; // stores the state of the emergency (false: hasn't been passed to the user | true : it's been passed)
 
-    private int warningDelay = 60000;
-    private int connectionStatusDelay = 10000;
-    private int connectionStatusPeriod = 60000;
+    private final int warningDelay = 60000;
+    private final int connectionStatusDelay = 10000;
+    private final int connectionStatusPeriod = 60000;
 
     @Override
     public void setup() {

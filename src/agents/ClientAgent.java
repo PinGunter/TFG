@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 import java.util.List;
 
@@ -40,5 +41,83 @@ public class ClientAgent extends BaseAgent {
         bye.setProtocol(protocol);
         bye.addReceiver(new AID(hub, AID.ISLOCALNAME));
         sendMsg(bye);
+    }
+
+    /**
+     * Checks if the msg is a checking connection message
+     *
+     * @param msg the msg received
+     * @return null if it was a checking connection (the agents dont need that msg) or the msg received originally
+     */
+    protected ACLMessage confirmConnection(ACLMessage msg) {
+        if (msg != null) {
+            if (msg.getProtocol().equals(Protocols.CHECK_CONNECTION.toString())) {
+                if (msg.getPerformative() == ACLMessage.QUERY_IF && msg.getSender().getLocalName().equals(hub)) {
+                    ACLMessage m = new ACLMessage();
+                    m.setSender(getAID());
+                    m.setProtocol(Protocols.CHECK_CONNECTION.toString());
+                    m.setPerformative(ACLMessage.CONFIRM);
+                    m.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                    sendMsg(m);
+                    return null;
+                }
+            }
+        }
+        return msg;
+    }
+
+    @Override
+    public ACLMessage receiveMsg() {
+        ACLMessage msg = receive();
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage receiveMsg(MessageTemplate template) {
+        ACLMessage msg = receive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg() {
+        ACLMessage msg = blockingReceive();
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+
+    @Override
+    public ACLMessage blockingReceiveMsg(int milis) {
+        ACLMessage msg = blockingReceive(milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg(MessageTemplate template) {
+        ACLMessage msg = blockingReceive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
+        ACLMessage msg = blockingReceive(template, milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
     }
 }

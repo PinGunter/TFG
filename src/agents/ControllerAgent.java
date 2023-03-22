@@ -53,28 +53,30 @@ public class ControllerAgent extends ClientAgent {
         }
 
         ACLMessage msg = receiveMsg();
-        if (msg != null) {
-            String sender = msg.getSender().getLocalName();
-            Protocols p;
-            try {
-                p = Protocols.valueOf(msg.getProtocol());
-            } catch (IllegalArgumentException e) {
-                p = Protocols.NULL;
-                logger.error("Not a valid protocol" + msg.getProtocol());
-            }
-            switch (p) {
-                case CHECK_CONNECTION -> {
-                    if (msg.getPerformative() == ACLMessage.QUERY_IF && sender.equals(hub)) {
-                        ACLMessage m = new ACLMessage();
-                        m.setSender(getAID());
-                        m.setProtocol(Protocols.CHECK_CONNECTION.toString());
-                        m.setPerformative(ACLMessage.CONFIRM);
-                        m.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                        sendMsg(m);
-                    }
-                }
-            }
-        }
+
+        // this is currently useless since the auto-response has been moved to the ClientAgent class
+//        if (msg != null) {
+//            String sender = msg.getSender().getLocalName();
+//            Protocols p;
+//            try {
+//                p = Protocols.valueOf(msg.getProtocol());
+//            } catch (IllegalArgumentException e) {
+//                p = Protocols.NULL;
+//                logger.error("Not a valid protocol" + msg.getProtocol());
+//            }
+//            switch (p) {
+//                case CHECK_CONNECTION -> {
+//                    if (msg.getPerformative() == ACLMessage.QUERY_IF && sender.equals(hub)) {
+//                        ACLMessage m = new ACLMessage();
+//                        m.setSender(getAID());
+//                        m.setProtocol(Protocols.CHECK_CONNECTION.toString());
+//                        m.setPerformative(ACLMessage.CONFIRM);
+//                        m.addReceiver(new AID(hub, AID.ISLOCALNAME));
+//                        sendMsg(m);
+//                    }
+//                }
+//            }
+//        }
         return status;
     }
 
