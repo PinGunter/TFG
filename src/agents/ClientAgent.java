@@ -21,7 +21,7 @@ public class ClientAgent extends BaseAgent {
             sendMsg(helloHub);
 
             logger.info("Waiting for hub");
-            helloHub = blockingReceive(5000);
+            helloHub = blockingReceiveMsg(5000);
             if (helloHub != null) {
                 if (helloHub.getPerformative() == ACLMessage.INFORM) {
                     logger.info("Greeted Hub");

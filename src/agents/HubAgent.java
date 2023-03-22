@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import utils.Timeout;
 
 import java.io.IOException;
@@ -19,14 +20,24 @@ public class HubAgent extends BaseAgent {
 
     private Timeout timer;
 
+
     private HashMap<String, Boolean> devicesConnected;
+
+    private HashMap<String, AID> emergencies; // key-value with the emergency and the aid of the device that sent it
+    private HashMap<String, Boolean> emergencyStatus; // stores the state of the emergency (false: hasn't been passed to the user | true : it's been passed)
+
+    private int warningDelay = 60000;
+    private int connectionStatusDelay = 10000;
+    private int connectionStatusPeriod = 60000;
 
     @Override
     public void setup() {
         super.setup();
-        notifiers = new ArrayList<String>();
-        devices = new ArrayList<String>();
+        notifiers = new ArrayList<>();
+        devices = new ArrayList<>();
         devicesConnected = new HashMap<>();
+        emergencies = new HashMap<>();
+        emergencyStatus = new HashMap<>();
         this.status = AgentStatus.LOGIN;
         timer = new Timeout();
         timer.setInterval(new TimerTask() {
@@ -34,7 +45,7 @@ public class HubAgent extends BaseAgent {
             public void run() {
                 checkDevices();
             }
-        }, 60000);
+        }, connectionStatusPeriod);
     }
 
     @Override
@@ -93,6 +104,7 @@ public class HubAgent extends BaseAgent {
                 devices.add(newDevice);
                 devicesConnected.put(newDevice, true);
                 ACLMessage reply = msg.createReply();
+                reply.setSender(getAID());
                 reply.setContent("hello, " + newDevice);
                 reply.setPerformative(ACLMessage.INFORM);
                 sendMsg(reply);
@@ -113,12 +125,6 @@ public class HubAgent extends BaseAgent {
             else if (notifiers.contains(sender)) {
                 switch (p) {
                     case COMMAND -> {
-
-                    }
-                    case WARNING -> {
-
-                    }
-                    default -> {
 
                     }
                 }
@@ -142,6 +148,11 @@ public class HubAgent extends BaseAgent {
                             devicesConnected.put(sender, true);
                         }
                     }
+                    case WARNING -> {
+                        emergencies.put(msg.getContent(), msg.getSender());
+                        emergencyStatus.put(msg.getContent(), false);
+                        return AgentStatus.WARNING;
+                    }
                 }
 
             }
@@ -150,6 +161,52 @@ public class HubAgent extends BaseAgent {
     }
 
     public AgentStatus warning() {
+        emergencies.forEach((warning, device) -> {
+            if (!emergencyStatus.get(warning)) {
+                ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                m.setContent(warning);
+                m.setProtocol(Protocols.WARNING.toString());
+                notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                sendMsg(m);
+                emergencyStatus.put(warning, true);
+                timer.setTimeout(() -> {
+                    emergencyStatus.put(warning, false);
+                }, warningDelay); // we try to remind the user again
+            }
+        });
+        ACLMessage response = receiveMsg(
+                MessageTemplate.and(
+                        MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
+                        MessageTemplate.or(
+                                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
+                        )
+                )
+        );
+
+        if (response != null) {
+            switch (response.getPerformative()) {
+                case ACLMessage.INFORM -> {
+                    ACLMessage endWarning = new ACLMessage(ACLMessage.INFORM);
+                    endWarning.setSender(getAID());
+                    endWarning.addReceiver(emergencies.get(response.getContent()));
+                    endWarning.setContent(response.getContent());
+                    endWarning.setProtocol(Protocols.WARNING.toString());
+                    sendMsg(endWarning);
+                    emergencies.remove(response.getContent());
+                }
+                case ACLMessage.REQUEST -> {
+                    emergencies.put(response.getContent(), response.getSender());
+                    emergencyStatus.put(response.getContent(), false);
+                }
+            }
+        }
+
+        if (emergencies.size() == 0) {
+            logger.info("Finished emergency");
+            return AgentStatus.IDLE;
+        }
+
         return status;
     }
 
@@ -172,7 +229,7 @@ public class HubAgent extends BaseAgent {
                 m.addReceiver(new AID(device, AID.ISLOCALNAME));
             });
             sendMsg(m);
-            timer.setTimeout(this::checkConnectionStatus, 10000); // 10 seconds for devices to send msg back
+            timer.setTimeout(this::checkConnectionStatus, connectionStatusDelay); // 10 seconds for devices to send msg back
         }
 
     }

@@ -43,6 +43,8 @@ public class TelegramAgent extends NotifierAgent {
 
     private Set<Long> userIDs;
 
+    private List<String> emergencies;
+
     @Override
     public void setup() {
         // agent setup
@@ -75,6 +77,7 @@ public class TelegramAgent extends NotifierAgent {
 
 
         onlineDevices = new ArrayList<>();
+        emergencies = new ArrayList<>();
         // TODO leer/escribir fichero
         userIDs = new HashSet<>();
     }
@@ -111,11 +114,10 @@ public class TelegramAgent extends NotifierAgent {
                 }
 
                 switch (p) {
-                    case NOTIFY_USER -> {
-                        notifyUsers(msg.getContent());
-                    }
                     case WARNING -> {
-
+                        // TODO separate msg from emergency
+                        emergencies.add(msg.getContent());
+                        alertUsers(msg.getContent());
                     }
                     case CONTROLLER_LOGIN -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -223,6 +225,8 @@ public class TelegramAgent extends NotifierAgent {
             handleDevices(data);
         } else if (data.startsWith("settings/")) {
             handleSettings(data);
+        } else if (data.startsWith("warning/")) {
+            handleWarning(data);
         } else if (data.equals("return")) {
             newTxt.setText(welcomeMessage);
             newKb.setReplyMarkup(mainMenu);
@@ -241,7 +245,6 @@ public class TelegramAgent extends NotifierAgent {
         bot.myExecute(newKb);
     }
 
-    // this looks really ugly :(
 
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
@@ -261,7 +264,8 @@ public class TelegramAgent extends NotifierAgent {
                     showDevicePages();
 
                 } else if (onlineDevices.contains(items.get(1))) {
-                    sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), Protocols.COMMAND.toString());
+                    //TODO send command correctly
+//                    sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), Protocols.COMMAND.toString());
                     newKb.setReplyMarkup(returnMainMenu);
                     newTxt.setText("Sending msg to " + items.get(1));
                 }
@@ -274,7 +278,6 @@ public class TelegramAgent extends NotifierAgent {
 
 
     }
-    // this looks really ugly :(
 
     private void handleSettings(String path) {
         List<String> items = List.of(path.split("/"));
@@ -293,6 +296,20 @@ public class TelegramAgent extends NotifierAgent {
             }
         }
 
+    }
+
+    private void handleWarning(String path) {
+        List<String> items = List.of(path.split("/"));
+        logger.info(items.toString());
+        if (items.size() != 2) {
+            logger.error("Unknown emergency callback received");
+        } else {
+            String emergency = items.get(1);
+            newTxt.setText("Alert acknowledged");
+            newKb.setReplyMarkup(returnMainMenu);
+            sendHub(ACLMessage.INFORM, emergency, Protocols.WARNING.toString());
+            emergencies.remove(emergency);
+        }
     }
 
     private void notUnderstood(long userId) {
@@ -352,11 +369,11 @@ public class TelegramAgent extends NotifierAgent {
         newKb.setReplyMarkup(deviceKeyboard);
     }
 
-    public void sendHub(int performative, String content, String device, String protocol) {
+    public void sendHub(int performative, String content, String protocol) {
         ACLMessage msg = new ACLMessage();
         msg.setSender(new AID(getLocalName(), AID.ISLOCALNAME));
         msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
-        msg.setContent(content + " | " + device);
+        msg.setContent(content);
         msg.setProtocol(protocol);
         msg.setPerformative(performative);
         sendMsg(msg);
@@ -364,5 +381,14 @@ public class TelegramAgent extends NotifierAgent {
 
     public void notifyUsers(String msg) {
         userIDs.forEach(user -> bot.sendText(user, Emoji.NOTIFY + " " + msg));
+    }
+
+    public void alertUsers(String msg) {
+        InlineKeyboardButton ack = InlineKeyboardButton.builder().text("Acknowledge emergency").callbackData("warning/" + msg).build();
+        userIDs.forEach(user -> bot.sendWithKeyboard(user,
+                Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING + "\n" +
+                        msg.toUpperCase() + "\n"
+                        + Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING
+                , InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
     }
 }

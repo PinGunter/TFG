@@ -9,6 +9,7 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import utils.Logger;
 
 import java.util.ArrayList;
@@ -258,19 +259,69 @@ public class BaseAgent extends Agent {
     }
 
     public void sendMsg(ACLMessage msg) {
-        logger.message("SENT: " +
-                ACLMessage.getPerformative(msg.getPerformative()) + " || " +
-                msg.getContent() + " || Reply to: " + msg.getInReplyTo());
+        logger.message(prettyPrint(msg));
         send(msg);
     }
 
     public ACLMessage receiveMsg() {
         ACLMessage msg = receive();
         if (msg != null) {
-            logger.message("RECEIVED: " +
-                    ACLMessage.getPerformative(msg.getPerformative()) + " || " +
-                    msg.getContent() + " || Reply to: " + msg.getInReplyTo());
+            logger.message(prettyPrint(msg));
         }
         return msg;
     }
+
+    public ACLMessage receiveMsg(MessageTemplate template) {
+        ACLMessage msg = receive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return msg;
+    }
+
+    public ACLMessage blockingReceiveMsg() {
+        ACLMessage msg = blockingReceive();
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return msg;
+    }
+
+    public ACLMessage blockingReceiveMsg(int milis) {
+        ACLMessage msg = blockingReceive(milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return msg;
+    }
+
+    public ACLMessage blockingReceiveMsg(MessageTemplate template) {
+        ACLMessage msg = blockingReceive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return msg;
+    }
+
+    public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
+        ACLMessage msg = blockingReceive(template, milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return msg;
+    }
+
+    protected String prettyPrint(ACLMessage msg) {
+        boolean hasSender = msg.getSender() != null;
+        Iterator<AID> receivers = msg.getAllReceiver();
+        String res = " ";
+        res += (hasSender ? msg.getSender().getLocalName() : "") + " ---" + ACLMessage.getPerformative(msg.getPerformative()) + "--> [";
+        while (receivers.hasNext()) {
+            res += receivers.next().getLocalName() + (receivers.hasNext() ? "," : "");
+        }
+        res += "] - {" + msg.getContent() + "}";
+        res += " @" + msg.getProtocol() + " || RW:" + msg.getReplyWith() + " || IRT:" + msg.getInReplyTo();
+        return res;
+    }
+    
 }
