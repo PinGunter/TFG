@@ -1,6 +1,9 @@
 package agents;
 
+import utils.Timeout;
+
 import java.util.List;
+import java.util.Random;
 
 public class ControllerAgent extends ClientAgent {
 
@@ -9,10 +12,13 @@ public class ControllerAgent extends ClientAgent {
 
     private boolean logout = false;
 
+    private Timeout timeout;
+
     @Override
     public void setup() {
         super.setup();
         status = AgentStatus.LOGIN;
+        timeout = new Timeout();
     }
 
     @Override
@@ -35,12 +41,15 @@ public class ControllerAgent extends ClientAgent {
     }
 
     public AgentStatus idle() {
+        // TESTING PURPOSES
+        timeout.setTimeout(() -> status = AgentStatus.LOGOUT, new Random().nextInt(20000, 30000));
         return status;
     }
 
     public AgentStatus logout() {
         // logout process
-        return status;
+        goodBye(Protocols.CONTROLLER_LOGOUT.toString());
+        return AgentStatus.END;
     }
 
     public AgentStatus warning() {

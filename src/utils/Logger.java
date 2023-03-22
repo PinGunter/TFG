@@ -2,8 +2,8 @@ package utils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class Logger {
 
@@ -13,9 +13,9 @@ public class Logger {
     private PrintWriter printWriter;
     private boolean writeToFile;
 
-    public Logger(String fileName){
+    public Logger(String fileName) {
         agentName = "anonymousAgent";
-        if (fileName != "" && fileName != null){
+        if (fileName != "" && fileName != null) {
             writeToFile = true;
             this.fileName = fileName;
         } else {
@@ -23,7 +23,8 @@ public class Logger {
             writeToFile = false;
         }
     }
-    public Logger(){
+
+    public Logger() {
         this("");
     }
 
@@ -31,13 +32,13 @@ public class Logger {
         this.agentName = agentName;
     }
 
-    private boolean openFile(String fileName){
+    private boolean openFile(String fileName) {
         try {
             FileWriter fw = new FileWriter(fileName, true);
             BufferedWriter bw = new BufferedWriter(fw);
             printWriter = new PrintWriter(bw);
             return true;
-        } catch (IOException e){
+        } catch (IOException e) {
             this.fileName = "";
             writeToFile = false;
             error("Couldn't write to file " + fileName);
@@ -45,8 +46,8 @@ public class Logger {
         }
     }
 
-    private void log(String msg){
-        if (writeToFile){
+    private void log(String msg) {
+        if (writeToFile) {
             openFile(fileName);
             printWriter.println(msg);
             printWriter.close();
@@ -54,12 +55,17 @@ public class Logger {
         System.out.println(msg);
     }
 
-    public void info(String msg){
+    public void info(String msg) {
         String output = "[INFO]" + "\t" + agentName + ": " + msg;
         log(output);
     }
 
-    public void error(String msg){
+    public void message(String msg) {
+        String output = "[COMMS]" + "\t" + agentName + ": " + msg;
+        log(output);
+    }
+
+    public void error(String msg) {
         String output = "[ERROR]" + "\t" + agentName + ": " + msg;
         log(output);
     }

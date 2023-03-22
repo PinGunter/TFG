@@ -2,7 +2,6 @@ package agents;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.UnreadableException;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -18,7 +17,9 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TelegramAgent extends NotifierAgent {
     TelegramBot bot;
@@ -37,8 +38,9 @@ public class TelegramAgent extends NotifierAgent {
     private int currentIndex;
     private int pageLimit = 6;
 
-    // this is currently a mockup
     private List<String> onlineDevices;
+
+    private Set<Long> userIDs;
 
     @Override
     public void setup() {
@@ -69,6 +71,11 @@ public class TelegramAgent extends NotifierAgent {
 
         // pagination
         currentIndex = 0;
+
+
+        onlineDevices = new ArrayList<>();
+        // TODO leer/escribir fichero
+        userIDs = new HashSet<>();
     }
 
     @Override
@@ -91,6 +98,40 @@ public class TelegramAgent extends NotifierAgent {
     }
 
     public AgentStatus running() {
+        ACLMessage msg = receiveMsg();
+        if (msg != null) {
+            if (msg.getSender().getLocalName().equals(hub)) {
+                Protocols p;
+                try {
+                    p = Protocols.valueOf(msg.getProtocol());
+                } catch (IllegalArgumentException e) {
+                    p = Protocols.NULL;
+                    logger.error("Not a valid protocol" + msg.getProtocol());
+                }
+
+                switch (p) {
+                    case NOTIFY_USER -> {
+                        notifyUsers(msg.getContent());
+                    }
+                    case WARNING -> {
+
+                    }
+                    case CONTROLLER_LOGIN -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            onlineDevices.add(msg.getContent());
+                            notifyUsers(msg.getContent() + " has connected");
+                        }
+                    }
+                    case CONTROLLER_LOGOUT -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            onlineDevices.remove(msg.getContent());
+                            notifyUsers(msg.getContent() + " has disconnected");
+                        }
+                    }
+                }
+            }
+        }
+
         return logout ? AgentStatus.LOGOUT : AgentStatus.IDLE;
     }
 
@@ -100,6 +141,7 @@ public class TelegramAgent extends NotifierAgent {
 
     public void onReceiveTelegramMessage(Update update) {
         if (update.hasCallbackQuery()) {
+            userIDs.add(update.getCallbackQuery().getFrom().getId());
             CallbackQuery callbackQuery = update.getCallbackQuery();
             long chatId = callbackQuery.getMessage().getChatId();
             int msgId = callbackQuery.getMessage().getMessageId();
@@ -112,6 +154,7 @@ public class TelegramAgent extends NotifierAgent {
         String messageText = message.getText();
 
         if (update.hasMessage()) {
+            userIDs.add(update.getMessage().getFrom().getId());
             logger.info("Received Telegram Message: " + messageText);
             if (message.isCommand()) {
 
@@ -189,15 +232,12 @@ public class TelegramAgent extends NotifierAgent {
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
         // obtain the updated list
-        onlineDevices = requestConnectedDevices();
         if (onlineDevices != null) {
-
             // the root
             if (items.size() == 1) {
                 newTxt.setText("Showing Online devices");
                 showDevicePages();
             } else {
-                // this looks really ugly :(
                 if (items.get(1).equals("backPagination")) {
                     currentIndex = Math.max(0, currentIndex - 1);
                     showDevicePages();
@@ -285,6 +325,8 @@ public class TelegramAgent extends NotifierAgent {
                 }
 
             }
+        } else {
+            newTxt.setText(Emoji.COLD_SWEAT + " There are no devices connected");
         }
 
         keyboardBuilder.keyboardRow(List.of(returnMainMenuBtn));
@@ -306,21 +348,7 @@ public class TelegramAgent extends NotifierAgent {
         sendMsg(msg);
     }
 
-
-    public ArrayList<String> requestConnectedDevices() {
-        int delay = 10 * 1000;
-        sendHub(ACLMessage.QUERY_REF, "", "", Protocols.ONLINE_DEVICES.toString());
-        ACLMessage response = blockingReceive(delay);
-        if (response != null) {
-            if (response.getSender().getLocalName().equals(hub) && response.getProtocol().equals(Protocols.ONLINE_DEVICES.toString())) {
-                try {
-                    return (ArrayList<String>) response.getContentObject();
-                } catch (UnreadableException e) {
-                    logger.error("Error reading msg content");
-                    return null;
-                }
-            }
-        }
-        return null;
+    public void notifyUsers(String msg) {
+        userIDs.forEach(user -> bot.sendText(user, Emoji.NOTIFY + " " + msg));
     }
 }

@@ -1,8 +1,8 @@
 package agents;
 
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,42 +57,47 @@ public class HubAgent extends BaseAgent {
     public AgentStatus idle() {
         ACLMessage msg = receiveMsg();
         if (msg != null) {
-            // is a login / logout msg
-            if (msg.getProtocol().equals(Protocols.CONTROLLER_LOGIN.toString())) {
-                devices.add(msg.getSender().getLocalName());
+            // get the protocol as an enum
+            String sender = msg.getSender().getLocalName();
+            Protocols p;
+            try {
+                p = Protocols.valueOf(msg.getProtocol());
+            } catch (IllegalArgumentException e) {
+                p = Protocols.NULL;
+                logger.error("Not a valid protocol" + msg.getProtocol());
+            }
+            // is a login msg
+            if (p == Protocols.CONTROLLER_LOGIN) {
+                /**
+                 * First, we confirm the login, then we communicate the new device
+                 * to the telegram agent
+                 */
+                String newDevice = msg.getSender().getLocalName();
+                devices.add(newDevice);
                 ACLMessage reply = msg.createReply();
-                reply.setContent("hello, " + msg.getSender().getLocalName());
+                reply.setContent("hello, " + newDevice);
                 reply.setPerformative(ACLMessage.INFORM);
                 sendMsg(reply);
+
+                // -------- Telegram
+                ACLMessage out = new ACLMessage();
+                out.setSender(getAID());
+                out.setProtocol(Protocols.CONTROLLER_LOGIN.toString());
+                out.setPerformative(ACLMessage.INFORM);
+                out.setContent(newDevice);
+                notifiers.forEach(notifier -> out.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                sendMsg(out);
+
                 return status;
             }
             // is a normal msg
             //  from notifier
-            else if (notifiers.contains(msg.getSender().getLocalName())) {
-                Protocols p;
-                try {
-                    p = Protocols.valueOf(msg.getProtocol());
-                } catch (IllegalArgumentException e) {
-                    p = Protocols.NULL;
-                    logger.error("Not a valid protocol" + msg.getProtocol());
-                }
+            else if (notifiers.contains(sender)) {
                 switch (p) {
-                    case ONLINE_DEVICES -> {
-                        if (msg.getPerformative() == ACLMessage.QUERY_REF) {
-                            ACLMessage out = new ACLMessage();
-                            out.setSender(getAID());
-                            out.addReceiver(msg.getSender());
-                            out.setProtocol(Protocols.ONLINE_DEVICES.toString());
-                            out.setPerformative(ACLMessage.INFORM);
-                            try {
-                                out.setContentObject(devices);
-                            } catch (IOException e) {
-                                logger.error("Error while serializing\n" + e.getMessage());
-                            }
-                            sendMsg(out);
-                        }
-                    }
                     case COMMAND -> {
+
+                    }
+                    case WARNING -> {
 
                     }
                     default -> {
@@ -101,9 +106,18 @@ public class HubAgent extends BaseAgent {
                 }
             }
             // from some device
-            else if (devices.contains(msg.getSender().getLocalName())) { // alarm system
-                if (msg.getProtocol().equals("WARNING")) {
-                    return AgentStatus.WARNING;
+            else if (devices.contains(sender)) { // alarm system
+                switch (p) {
+                    case CONTROLLER_LOGOUT -> {
+                        devices.remove(sender);
+                        ACLMessage m = new ACLMessage();
+                        m.setSender(getAID());
+                        m.setProtocol(Protocols.CONTROLLER_LOGOUT.toString());
+                        m.setPerformative(ACLMessage.INFORM);
+                        m.setContent(sender);
+                        notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                        sendMsg(m);
+                    }
                 }
             }
         }

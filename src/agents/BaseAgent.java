@@ -20,7 +20,7 @@ import java.util.Scanner;
  * Base Class for our agents. It's heavily inspired by Luis Castillo's LARVABaseAgent
  * but without any of the extra functionality needed for LARVA since this project does
  * not use it.
- *
+ * <p>
  * It acts as a wrapper of a Jade Agent
  */
 
@@ -37,8 +37,10 @@ public class BaseAgent extends Agent {
 
     protected boolean exit = false;
 
+    protected boolean isRequesting = false;
+
     @Override
-    public void setup(){
+    public void setup() {
         super.setup();
         logger = new Logger();
         logger.setAgentName(getLocalName());
@@ -46,7 +48,7 @@ public class BaseAgent extends Agent {
     }
 
     @Override
-    public void takeDown(){
+    public void takeDown() {
         super.takeDown();
     }
 
@@ -60,7 +62,7 @@ public class BaseAgent extends Agent {
                     postExecute();
                     ncycles++;
                 });
-                if (exit){
+                if (exit) {
                     doDelete();
                 }
             }
@@ -76,33 +78,36 @@ public class BaseAgent extends Agent {
     private void shield(Runnable runnable) {
         try {
             runnable.run();
-        } catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             exit = true;
         }
     }
 
-    public void execute(){}
+    public void execute() {
+    }
 
-    public void preExecute(){}
+    public void preExecute() {
+    }
 
-    public void postExecute(){}
+    public void postExecute() {
+    }
 
     public ArrayList<String> DFGetProviderList() {
         return DFGetAllProvidersOf("");
     }
 
-    public ArrayList<String> DFGetServiceList(){
+    public ArrayList<String> DFGetServiceList() {
         return DFGetAllServicesProvidedBy("");
     }
 
-    public ArrayList<String> DFGetAllProvidersOf(String service){
+    public ArrayList<String> DFGetAllProvidersOf(String service) {
         ArrayList<String> res = new ArrayList<>();
         DFAgentDescription[] providers;
         providers = this.DFQueryAllProviders(service);
-        if (providers != null && providers.length > 0){
-            for (DFAgentDescription list : providers){
-                if (!res.contains(list.getName().getLocalName())){
+        if (providers != null && providers.length > 0) {
+            for (DFAgentDescription list : providers) {
+                if (!res.contains(list.getName().getLocalName())) {
                     res.add(list.getName().getLocalName());
                 }
             }
@@ -114,12 +119,12 @@ public class BaseAgent extends Agent {
         ArrayList<String> res = new ArrayList<>();
         DFAgentDescription[] services;
         services = this.DFQueryAllServicesProvided(agentName);
-        if (services != null && services.length > 0){
-            for (DFAgentDescription dfAgentDescription : services){
+        if (services != null && services.length > 0) {
+            for (DFAgentDescription dfAgentDescription : services) {
                 Iterator sdi = dfAgentDescription.getAllServices();
-                while (sdi.hasNext()){
+                while (sdi.hasNext()) {
                     ServiceDescription sd = (ServiceDescription) sdi.next();
-                    if (!res.contains(sd.getType())){
+                    if (!res.contains(sd.getType())) {
                         res.add(sd.getType());
                     }
                 }
@@ -129,19 +134,19 @@ public class BaseAgent extends Agent {
         return res;
     }
 
-    public boolean DFHasService(String agentName, String service){
+    public boolean DFHasService(String agentName, String service) {
         return DFGetAllProvidersOf(service).contains(service);
     }
 
-    public boolean DFSetMyServices(List<String> services){
+    public boolean DFSetMyServices(List<String> services) {
         logger.info("Services registered" + services.toString());
-        if (this.DFGetAllServicesProvidedBy(getLocalName()).size() > 0){
+        if (this.DFGetAllServicesProvidedBy(getLocalName()).size() > 0) {
             DFRemoveAllMyServices();
         }
         return DFSetServices(getLocalName(), services);
     }
 
-    public boolean DFAddMyServices(List<String> services){
+    public boolean DFAddMyServices(List<String> services) {
         List<String> previous;
         logger.info("Removing services" + services.toString());
         previous = DFGetAllServicesProvidedBy(getLocalName());
@@ -149,7 +154,7 @@ public class BaseAgent extends Agent {
         return DFSetMyServices(previous);
     }
 
-    public boolean DFRemoveMyServices(List<String> services){
+    public boolean DFRemoveMyServices(List<String> services) {
         List<String> previous;
         logger.info("Removing services" + services.toString());
         previous = DFGetAllServicesProvidedBy(getLocalName());
@@ -157,15 +162,15 @@ public class BaseAgent extends Agent {
         return DFSetMyServices(previous);
     }
 
-    public void DFRemoveAllMyServices(){
-        try{
+    public void DFRemoveAllMyServices() {
+        try {
             DFService.deregister(this);
-        } catch (FIPAException e){
+        } catch (FIPAException e) {
             logger.error(e.getMessage());
         }
     }
 
-    private boolean DFSetServices(String agentName, List<String> services){
+    private boolean DFSetServices(String agentName, List<String> services) {
         DFAgentDescription dfAgentDescription;
         ServiceDescription serviceDescription;
         boolean okay = false;
@@ -173,28 +178,28 @@ public class BaseAgent extends Agent {
         dfAgentDescription = new DFAgentDescription();
         dfAgentDescription.setName(new AID(agentName, AID.ISLOCALNAME));
 
-        for (String s : services){
+        for (String s : services) {
             serviceDescription = new ServiceDescription();
             serviceDescription.setName(s);
             serviceDescription.setType(s);
             dfAgentDescription.addServices(serviceDescription);
         }
-        try{
+        try {
             DFService.register(this, dfAgentDescription);
             okay = true;
-        } catch (FIPAException e){
+        } catch (FIPAException e) {
             logger.error(e.getMessage());
         }
         return okay;
     }
 
-    private DFAgentDescription[] DFQueryAllServicesProvided(String agentName){
+    private DFAgentDescription[] DFQueryAllServicesProvided(String agentName) {
         DFAgentDescription dfAgentDescription;
         ServiceDescription serviceDescription;
-        DFAgentDescription services [] = new DFAgentDescription[0];
+        DFAgentDescription services[] = new DFAgentDescription[0];
 
         dfAgentDescription = new DFAgentDescription();
-        if (!agentName.equals("")){
+        if (!agentName.equals("")) {
             dfAgentDescription.setName(new AID(agentName, AID.ISLOCALNAME));
         }
         serviceDescription = new ServiceDescription();
@@ -203,38 +208,38 @@ public class BaseAgent extends Agent {
         constraints.setMaxResults((long) -1);
         try {
             services = DFService.search(this, dfAgentDescription, constraints);
-        } catch (FIPAException e){
+        } catch (FIPAException e) {
             logger.error(e.getMessage());
         }
         return services;
     }
 
-    private DFAgentDescription[] DFQueryAllProviders(String service){
+    private DFAgentDescription[] DFQueryAllProviders(String service) {
         DFAgentDescription dfAgentDescription;
         ServiceDescription serviceDescription;
-        DFAgentDescription [] agents = new DFAgentDescription[0];
+        DFAgentDescription[] agents = new DFAgentDescription[0];
         dfAgentDescription = new DFAgentDescription();
         SearchConstraints constraints = new SearchConstraints();
         constraints.setMaxResults((long) -1);
         serviceDescription = new ServiceDescription();
-        if (!service.equals("")){
+        if (!service.equals("")) {
             serviceDescription.setName(service);
         }
         dfAgentDescription.addServices(serviceDescription);
         try {
             agents = DFService.search(this, dfAgentDescription, constraints);
-        } catch (FIPAException e){
+        } catch (FIPAException e) {
             logger.error(e.getMessage());
         }
 
         return agents;
     }
 
-    protected void logError (String msg) {
+    protected void logError(String msg) {
         logger.error(msg);
     }
 
-    protected void logInfo (String msg){
+    protected void logInfo(String msg) {
         logger.info(msg);
     }
 
@@ -243,25 +248,27 @@ public class BaseAgent extends Agent {
         return new Scanner(System.in).nextLine();
     }
 
-    protected boolean confirm (String message) {
+    protected boolean confirm(String message) {
         String line = inputLine(message);
         return line.length() == 0 || line.toUpperCase().charAt(0) == 'Y';
     }
-    public void setExit (boolean exit) {
+
+    public void setExit(boolean exit) {
         this.exit = exit;
     }
 
     public void sendMsg(ACLMessage msg) {
-        logger.info("SENT: " +
-                ACLMessage.getPerformative(msg.getPerformative()) + " || "  +
-                msg.getContent() + " || Reply to: " + msg.getInReplyTo());        send(msg);
+        logger.message("SENT: " +
+                ACLMessage.getPerformative(msg.getPerformative()) + " || " +
+                msg.getContent() + " || Reply to: " + msg.getInReplyTo());
+        send(msg);
     }
 
-    public ACLMessage receiveMsg(){
+    public ACLMessage receiveMsg() {
         ACLMessage msg = receive();
-        if (msg != null){
-            logger.info("RECEIVED: " +
-                    ACLMessage.getPerformative(msg.getPerformative()) + " || "  +
+        if (msg != null) {
+            logger.message("RECEIVED: " +
+                    ACLMessage.getPerformative(msg.getPerformative()) + " || " +
                     msg.getContent() + " || Reply to: " + msg.getInReplyTo());
         }
         return msg;

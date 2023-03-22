@@ -31,4 +31,14 @@ public class ClientAgent extends BaseAgent {
         }
         return AgentStatus.LOGIN;
     }
+
+    public void goodBye(String protocol) {
+        ACLMessage bye = new ACLMessage();
+        bye.setPerformative(ACLMessage.REQUEST); //TODO esta bien esta performativa?
+        bye.setSender(getAID());
+        bye.setContent("Bye bye!");
+        bye.setProtocol(protocol);
+        bye.addReceiver(new AID(hub, AID.ISLOCALNAME));
+        sendMsg(bye);
+    }
 }

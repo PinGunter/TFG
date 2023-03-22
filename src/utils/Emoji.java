@@ -13,7 +13,9 @@ public enum Emoji {
     GEAR("⚙"),
     WARNING("⚠"),
     ALERT("\uD83D\uDEA8"),
-    ERROR("❗");
+    ERROR("❗"),
+
+    NOTIFY("🔔");
 
 
     private String keycode;
