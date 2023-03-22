@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -126,6 +127,19 @@ public class TelegramAgent extends NotifierAgent {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
                             onlineDevices.remove(msg.getContent());
                             notifyUsers(msg.getContent() + " has disconnected");
+                        }
+                    }
+                    case CONTROLLER_DISCONNECT -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            try {
+                                ArrayList<String> removed = (ArrayList<String>) msg.getContentObject();
+                                removed.forEach(device -> {
+                                    notifyUsers(device + " has disconnected without logging out");
+                                });
+                                onlineDevices.removeAll(removed);
+                            } catch (UnreadableException e) {
+                                logger.error("Error deserializing");
+                            }
                         }
                     }
                 }
