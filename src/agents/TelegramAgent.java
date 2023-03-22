@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -68,12 +69,6 @@ public class TelegramAgent extends NotifierAgent {
 
         // pagination
         currentIndex = 0;
-
-        // currently a mockup
-        onlineDevices = new ArrayList<>();
-        for (int i = 0; i < 23; i++) {
-            onlineDevices.add("D" + i);
-        }
     }
 
     @Override
@@ -92,7 +87,7 @@ public class TelegramAgent extends NotifierAgent {
             this.DFAddMyServices(List.of("NOTIFIER", "TELEGRAM"));
             isFirstTime = false;
         }
-        return this.lookForHub("NOTIFIER-LOGIN");
+        return this.lookForHub(Protocols.NOTIFIER_LOGIN.toString());
     }
 
     public AgentStatus running() {
@@ -193,25 +188,34 @@ public class TelegramAgent extends NotifierAgent {
 
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
-        // the root
-        if (items.size() == 1) {
-            newTxt.setText("Showing Online devices");
-            showDevicePages();
-        } else {
-            // this looks really ugly :(
-            if (items.get(1).equals("backPagination")) {
-                currentIndex = Math.max(0, currentIndex - 1);
-                showDevicePages();
+        // obtain the updated list
+        onlineDevices = requestConnectedDevices();
+        if (onlineDevices != null) {
 
-            } else if (items.get(1).equals("nextPagination")) {
-                currentIndex += 1;
+            // the root
+            if (items.size() == 1) {
+                newTxt.setText("Showing Online devices");
                 showDevicePages();
+            } else {
+                // this looks really ugly :(
+                if (items.get(1).equals("backPagination")) {
+                    currentIndex = Math.max(0, currentIndex - 1);
+                    showDevicePages();
 
-            } else if (onlineDevices.contains(items.get(1))) {
-                sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), "");
-                newKb.setReplyMarkup(returnMainMenu);
-                newTxt.setText("Sending msg to " + items.get(1));
+                } else if (items.get(1).equals("nextPagination")) {
+                    currentIndex += 1;
+                    showDevicePages();
+
+                } else if (onlineDevices.contains(items.get(1))) {
+                    sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), Protocols.COMMAND.toString());
+                    newKb.setReplyMarkup(returnMainMenu);
+                    newTxt.setText("Sending msg to " + items.get(1));
+                }
             }
+
+        } else {
+            newTxt.setText(Emoji.ERROR + " Error getting device list " + Emoji.ERROR);
+            newKb.setReplyMarkup(returnMainMenu);
         }
 
 
@@ -298,21 +302,25 @@ public class TelegramAgent extends NotifierAgent {
         msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
         msg.setContent(content + " | " + device);
         msg.setProtocol(protocol);
-        msg.setPerformative(ACLMessage.REQUEST);
+        msg.setPerformative(performative);
         sendMsg(msg);
     }
 
 
-//    public List<String> connectedDevices() {
-//        int delay = 10 * 1000;
-//        String protocol = "ONLINE-DEVICES";
-//        sendHub(ACLMessage.QUERY_REF, "", "", protocol);
-//        ACLMessage response = blockingReceive(delay);
-//        if (response != null) {
-//            if (response.getSender().getLocalName().equals(hub) && response.getProtocol().equals(protocol)) {
-//
-//            }
-//        }
-//
-//    }
+    public ArrayList<String> requestConnectedDevices() {
+        int delay = 10 * 1000;
+        sendHub(ACLMessage.QUERY_REF, "", "", Protocols.ONLINE_DEVICES.toString());
+        ACLMessage response = blockingReceive(delay);
+        if (response != null) {
+            if (response.getSender().getLocalName().equals(hub) && response.getProtocol().equals(Protocols.ONLINE_DEVICES.toString())) {
+                try {
+                    return (ArrayList<String>) response.getContentObject();
+                } catch (UnreadableException e) {
+                    logger.error("Error reading msg content");
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
 }

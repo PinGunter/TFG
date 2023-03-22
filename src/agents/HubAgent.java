@@ -2,12 +2,13 @@ package agents;
 
 import jade.lang.acl.ACLMessage;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HubAgent extends BaseAgent {
-    private List<String> notifiers;
-    private List<String> devices;
+    private ArrayList<String> notifiers;
+    private ArrayList<String> devices;
 
     private boolean registered = false;
 
@@ -39,7 +40,7 @@ public class HubAgent extends BaseAgent {
         ACLMessage notifierMsg = receiveMsg();
         if (notifierMsg != null) {
             if (notifierMsg.getPerformative() == ACLMessage.REQUEST && notifierMsg.getContent().equals("Hello")) {
-                if (notifierMsg.getProtocol().equals("NOTIFIER-LOGIN")) {
+                if (notifierMsg.getProtocol().equals(Protocols.NOTIFIER_LOGIN.toString())) {
                     notifiers.add(notifierMsg.getSender().getLocalName());
                     ACLMessage reply = notifierMsg.createReply();
                     reply.setContent("helloTelegram");
@@ -57,7 +58,7 @@ public class HubAgent extends BaseAgent {
         ACLMessage msg = receiveMsg();
         if (msg != null) {
             // is a login / logout msg
-            if (msg.getProtocol().equals("CONTROLLER-LOGIN")) {
+            if (msg.getProtocol().equals(Protocols.CONTROLLER_LOGIN.toString())) {
                 devices.add(msg.getSender().getLocalName());
                 ACLMessage reply = msg.createReply();
                 reply.setContent("hello, " + msg.getSender().getLocalName());
@@ -66,9 +67,41 @@ public class HubAgent extends BaseAgent {
                 return status;
             }
             // is a normal msg
+            //  from notifier
             else if (notifiers.contains(msg.getSender().getLocalName())) {
-                logger.info("FW from " + msg.getSender().getLocalName() + ": " + msg.getContent());
-            } else if (devices.contains(msg.getSender().getLocalName())) {
+                Protocols p;
+                try {
+                    p = Protocols.valueOf(msg.getProtocol());
+                } catch (IllegalArgumentException e) {
+                    p = Protocols.NULL;
+                    logger.error("Not a valid protocol" + msg.getProtocol());
+                }
+                switch (p) {
+                    case ONLINE_DEVICES -> {
+                        if (msg.getPerformative() == ACLMessage.QUERY_REF) {
+                            ACLMessage out = new ACLMessage();
+                            out.setSender(getAID());
+                            out.addReceiver(msg.getSender());
+                            out.setProtocol(Protocols.ONLINE_DEVICES.toString());
+                            out.setPerformative(ACLMessage.INFORM);
+                            try {
+                                out.setContentObject(devices);
+                            } catch (IOException e) {
+                                logger.error("Error while serializing\n" + e.getMessage());
+                            }
+                            sendMsg(out);
+                        }
+                    }
+                    case COMMAND -> {
+
+                    }
+                    default -> {
+
+                    }
+                }
+            }
+            // from some device
+            else if (devices.contains(msg.getSender().getLocalName())) { // alarm system
                 if (msg.getProtocol().equals("WARNING")) {
                     return AgentStatus.WARNING;
                 }

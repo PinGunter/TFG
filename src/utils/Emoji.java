@@ -1,8 +1,8 @@
 package utils;
 
 public enum Emoji {
-    OWL ("\uD83E\uDD89"),
-    NERD ("\uD83E\uDD13"),
+    OWL("\uD83E\uDD89"),
+    NERD("\uD83E\uDD13"),
     COLD_SWEAT("\uD83D\uDE05"),
     FINGER_UP("☝"),
     HELLO("👋"),
@@ -10,8 +10,10 @@ public enum Emoji {
     LEFT_ARROW("⬅"),
     HOUSE("\uD83C\uDFE0"),
     LAPTOP("\uD83D\uDCBB"),
-    GEAR("⚙")
-    ;
+    GEAR("⚙"),
+    WARNING("⚠"),
+    ALERT("\uD83D\uDEA8"),
+    ERROR("❗");
 
 
     private String keycode;
@@ -21,7 +23,7 @@ public enum Emoji {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return keycode;
     }
 }

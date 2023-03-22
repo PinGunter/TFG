@@ -31,7 +31,7 @@ public class ControllerAgent extends ClientAgent {
             this.DFAddMyServices(List.of("DEVICE-CONTROLLER"));
             isFirstTime = false;
         }
-        return this.lookForHub("CONTROLLER-LOGIN");
+        return this.lookForHub(Protocols.CONTROLLER_LOGIN.toString());
     }
 
     public AgentStatus idle() {
