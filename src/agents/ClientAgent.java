@@ -4,6 +4,8 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 public class ClientAgent extends BaseAgent {
@@ -11,12 +13,23 @@ public class ClientAgent extends BaseAgent {
     protected boolean isFirstTime = true;
 
     public AgentStatus lookForHub(String protocol) {
+        return lookForHub(protocol, "Hello", null);
+    }
+
+    public AgentStatus lookForHub(String protocol, String content, Serializable contentObject) {
         List<String> hubProvider = DFGetAllProvidersOf("HUB");
         if (!hubProvider.isEmpty()) {
             hub = hubProvider.get(0);
             ACLMessage helloHub = new ACLMessage();
             helloHub.addReceiver(new AID(hub, AID.ISLOCALNAME));
-            helloHub.setContent("Hello");
+            helloHub.setContent(content != null ? content : "Hello");
+            if (contentObject != null) {
+                try {
+                    helloHub.setContentObject(contentObject);
+                } catch (IOException e) {
+                    logger.error("Error while serializing");
+                }
+            }
             helloHub.setPerformative(ACLMessage.REQUEST);
             helloHub.setProtocol(protocol);
             sendMsg(helloHub);

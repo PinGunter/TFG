@@ -1,10 +1,15 @@
 package agents;
 
+import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import messages.Command;
+import messages.ControllerID;
 import utils.Timeout;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -19,11 +24,28 @@ public class ControllerAgent extends ClientAgent {
 
     private boolean hasSentEmergency = false;
 
+    private boolean hasCamera, hasMicrophone, hasSpeakers, hasBattery, hasScreen;
+    ArrayList<Capabilities> capabilities;
+
+
     @Override
     public void setup() {
         super.setup();
         status = AgentStatus.LOGIN;
         timeout = new Timeout();
+
+        //TODO this is currently a mockup, when sensors and actuators are done, they will communicate their capabilities
+        hasCamera = new Random().nextBoolean();
+        hasMicrophone = new Random().nextBoolean();
+        hasSpeakers = new Random().nextBoolean();
+        hasBattery = new Random().nextBoolean();
+        hasScreen = new Random().nextBoolean();
+        capabilities = new ArrayList<>();
+        if (hasCamera) capabilities.add(Capabilities.CAMERA);
+        if (hasMicrophone) capabilities.add(Capabilities.MICROPHONE);
+        if (hasSpeakers) capabilities.add(Capabilities.SPEAKERS);
+        if (hasBattery) capabilities.add(Capabilities.BATTERY);
+        if (hasScreen) capabilities.add(Capabilities.SCREEN);
     }
 
     @Override
@@ -40,10 +62,12 @@ public class ControllerAgent extends ClientAgent {
     public AgentStatus login() {
         if (isFirstTime) {
             this.DFAddMyServices(List.of("DEVICE-CONTROLLER"));
+            this.DFAddMyServices(capabilities.stream().map(Enum::toString).toList());
             isFirstTime = false;
         }
-        return this.lookForHub(Protocols.CONTROLLER_LOGIN.toString());
+        return this.lookForHub(Protocols.CONTROLLER_LOGIN.toString(), null, new ControllerID(getLocalName(), capabilities));
     }
+
 
     public AgentStatus idle() {
         // TESTING PURPOSES
@@ -54,29 +78,35 @@ public class ControllerAgent extends ClientAgent {
 
         ACLMessage msg = receiveMsg();
 
-        // this is currently useless since the auto-response has been moved to the ClientAgent class
-//        if (msg != null) {
-//            String sender = msg.getSender().getLocalName();
-//            Protocols p;
-//            try {
-//                p = Protocols.valueOf(msg.getProtocol());
-//            } catch (IllegalArgumentException e) {
-//                p = Protocols.NULL;
-//                logger.error("Not a valid protocol" + msg.getProtocol());
-//            }
-//            switch (p) {
-//                case CHECK_CONNECTION -> {
-//                    if (msg.getPerformative() == ACLMessage.QUERY_IF && sender.equals(hub)) {
-//                        ACLMessage m = new ACLMessage();
-//                        m.setSender(getAID());
-//                        m.setProtocol(Protocols.CHECK_CONNECTION.toString());
-//                        m.setPerformative(ACLMessage.CONFIRM);
-//                        m.addReceiver(new AID(hub, AID.ISLOCALNAME));
-//                        sendMsg(m);
-//                    }
-//                }
-//            }
-//        }
+        if (msg != null) {
+            String sender = msg.getSender().getLocalName();
+            Protocols p;
+            try {
+                p = Protocols.valueOf(msg.getProtocol());
+            } catch (IllegalArgumentException e) {
+                p = Protocols.NULL;
+                logger.error("Not a valid protocol: " + msg.getProtocol());
+            }
+            switch (p) {
+                case COMMAND -> {
+                    if (msg.getPerformative() == ACLMessage.REQUEST && sender.equals(hub)) {
+                        try {
+                            Command c = (Command) msg.getContentObject();
+                            // TODO here, the controller would send the order to the specific sensor/actuator (command.getTarget())
+                            // since we dont have those yet, its gonna send a confirmation back to the user
+                            ACLMessage confirm = new ACLMessage(ACLMessage.INFORM);
+                            confirm.setContent("ORDER: " + c.getOrder() + " received");
+                            confirm.setSender(getAID());
+                            confirm.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                            confirm.setProtocol(Protocols.COMMAND.toString());
+                            sendMsg(confirm);
+                        } catch (UnreadableException e) {
+                            logger.error("Error while deserializing");
+                        }
+                    }
+                }
+            }
+        }
         return status;
     }
 

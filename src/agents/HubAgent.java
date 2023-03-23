@@ -1,8 +1,12 @@
 package agents;
 
+import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import messages.Command;
+import messages.ControllerID;
 import utils.Timeout;
 
 import java.io.IOException;
@@ -14,7 +18,7 @@ import java.util.TimerTask;
 
 public class HubAgent extends BaseAgent {
     private ArrayList<String> notifiers;
-    private ArrayList<String> devices;
+    private HashMap<String, List<Capabilities>> devices;
 
     private boolean registered = false;
 
@@ -34,7 +38,7 @@ public class HubAgent extends BaseAgent {
     public void setup() {
         super.setup();
         notifiers = new ArrayList<>();
-        devices = new ArrayList<>();
+        devices = new HashMap<>();
         devicesConnected = new HashMap<>();
         emergencies = new HashMap<>();
         emergencyStatus = new HashMap<>();
@@ -100,24 +104,29 @@ public class HubAgent extends BaseAgent {
                  * First, we confirm the login, then we communicate the new device
                  * to the telegram agent
                  */
-                String newDevice = msg.getSender().getLocalName();
-                devices.add(newDevice);
-                devicesConnected.put(newDevice, true);
-                ACLMessage reply = msg.createReply();
-                reply.setSender(getAID());
-                reply.setContent("hello, " + newDevice);
-                reply.setPerformative(ACLMessage.INFORM);
-                sendMsg(reply);
+                ControllerID controllerID;
+                try {
+                    controllerID = (ControllerID) msg.getContentObject();
+                    ACLMessage reply = msg.createReply();
+                    reply.setSender(getAID());
+                    reply.setContent("hello, " + controllerID.getName());
+                    reply.setPerformative(ACLMessage.INFORM);
+                    sendMsg(reply);
+                    devices.put(controllerID.getName(), controllerID.getCapabilities());
+                    devicesConnected.put(controllerID.getName(), true);
 
-                // -------- Telegram
-                ACLMessage out = new ACLMessage();
-                out.setSender(getAID());
-                out.setProtocol(Protocols.CONTROLLER_LOGIN.toString());
-                out.setPerformative(ACLMessage.INFORM);
-                out.setContent(newDevice);
-                notifiers.forEach(notifier -> out.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
-                sendMsg(out);
+                    // -------- Telegram
+                    ACLMessage out = new ACLMessage();
+                    out.setSender(getAID());
+                    out.setProtocol(Protocols.CONTROLLER_LOGIN.toString());
+                    out.setPerformative(ACLMessage.INFORM);
+                    out.setContentObject(controllerID);
+                    notifiers.forEach(notifier -> out.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                    sendMsg(out);
 
+                } catch (UnreadableException | IOException e) {
+                    logger.error("Error while deserializing");
+                }
                 return status;
             }
             // is a normal msg
@@ -125,12 +134,25 @@ public class HubAgent extends BaseAgent {
             else if (notifiers.contains(sender)) {
                 switch (p) {
                     case COMMAND -> {
+                        try {
+                            Command command = (Command) msg.getContentObject();
+                            if (devices.containsKey(command.getTargetDevice())) {
+                                ACLMessage order = new ACLMessage(ACLMessage.REQUEST);
+                                order.setProtocol(Protocols.COMMAND.toString());
+                                order.setSender(getAID());
+                                order.addReceiver(new AID(command.getTargetDevice(), AID.ISLOCALNAME));
+                                order.setContentObject(new Command(command.getOrder(), command.getTargetChild(), ""));
+                                sendMsg(order);
+                            }
 
+                        } catch (UnreadableException | IOException e) {
+                            logger.error("Error while deserializing");
+                        }
                     }
                 }
             }
             // from some device
-            else if (devices.contains(sender)) { // alarm system
+            else if (devices.containsKey(sender)) { // alarm system
                 switch (p) {
                     case CONTROLLER_LOGOUT -> {
                         devices.remove(sender);
@@ -152,6 +174,16 @@ public class HubAgent extends BaseAgent {
                         emergencies.put(msg.getContent(), msg.getSender());
                         emergencyStatus.put(msg.getContent(), false);
                         return AgentStatus.WARNING;
+                    }
+                    case COMMAND -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            ACLMessage m = new ACLMessage(ACLMessage.INFORM);
+                            m.setSender(getAID());
+                            m.setProtocol(Protocols.COMMAND.toString());
+                            m.setContent(msg.getContent());
+                            notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                            sendMsg(m);
+                        }
                     }
                 }
 
@@ -225,7 +257,7 @@ public class HubAgent extends BaseAgent {
             m.setPerformative(ACLMessage.QUERY_IF);
             m.setSender(getAID());
             m.setProtocol(Protocols.CHECK_CONNECTION.toString());
-            devices.forEach(device -> {
+            devices.forEach((device, _capabilities) -> {
                 m.addReceiver(new AID(device, AID.ISLOCALNAME));
             });
             sendMsg(m);
@@ -239,7 +271,7 @@ public class HubAgent extends BaseAgent {
         devicesConnected.forEach((device, status) -> {
             if (!status) offlineDevices.add(device);
         });
-        devices.removeAll(offlineDevices);
+        offlineDevices.stream().forEach(devices::remove);
         ACLMessage m = new ACLMessage();
         m.setPerformative(ACLMessage.INFORM); // TODO es esta?
         m.setSender(getAID());

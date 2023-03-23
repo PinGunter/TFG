@@ -15,7 +15,8 @@ public enum Emoji {
     ALERT("\uD83D\uDEA8"),
     ERROR("❗"),
 
-    NOTIFY("🔔");
+    NOTIFY("🔔"),
+    CHECK("✅");
 
 
     private String keycode;

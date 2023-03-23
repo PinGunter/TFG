@@ -1,8 +1,11 @@
 package agents;
 
+import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
+import messages.Command;
+import messages.ControllerID;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -17,10 +20,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TelegramAgent extends NotifierAgent {
     TelegramBot bot;
@@ -39,7 +41,7 @@ public class TelegramAgent extends NotifierAgent {
     private int currentIndex;
     private int pageLimit = 6;
 
-    private List<String> onlineDevices;
+    private HashMap<String, List<Capabilities>> onlineDevices;
 
     private Set<Long> userIDs;
 
@@ -76,7 +78,7 @@ public class TelegramAgent extends NotifierAgent {
         currentIndex = 0;
 
 
-        onlineDevices = new ArrayList<>();
+        onlineDevices = new HashMap<>();
         emergencies = new ArrayList<>();
         // TODO leer/escribir fichero
         userIDs = new HashSet<>();
@@ -121,7 +123,13 @@ public class TelegramAgent extends NotifierAgent {
                     }
                     case CONTROLLER_LOGIN -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
-                            onlineDevices.add(msg.getContent());
+                            ControllerID cId = new ControllerID("", null);
+                            try {
+                                cId = (ControllerID) msg.getContentObject();
+                            } catch (UnreadableException e) {
+                                logger.error("Error while deserializing");
+                            }
+                            onlineDevices.put(cId.getName(), cId.getCapabilities());
                             notifyUsers(msg.getContent() + " has connected");
                         }
                     }
@@ -138,11 +146,14 @@ public class TelegramAgent extends NotifierAgent {
                                 removed.forEach(device -> {
                                     notifyUsers(device + " has disconnected without logging out");
                                 });
-                                onlineDevices.removeAll(removed);
+                                removed.forEach(onlineDevices::remove);
                             } catch (UnreadableException e) {
                                 logger.error("Error deserializing");
                             }
                         }
+                    }
+                    case COMMAND -> {
+                        notifyUsers(msg.getContent());
                     }
                 }
             }
@@ -263,11 +274,9 @@ public class TelegramAgent extends NotifierAgent {
                     currentIndex += 1;
                     showDevicePages();
 
-                } else if (onlineDevices.contains(items.get(1))) {
-                    //TODO send command correctly
-//                    sendHub(ACLMessage.REQUEST, "button pressed", items.get(1), Protocols.COMMAND.toString());
-                    newKb.setReplyMarkup(returnMainMenu);
-                    newTxt.setText("Sending msg to " + items.get(1));
+                } else if (onlineDevices.containsKey(items.get(1))) {
+                    String newPath = items.subList(1, items.size()).stream().collect(Collectors.joining("/"));
+                    handleDeviceSpecific(newPath);
                 }
             }
 
@@ -276,6 +285,26 @@ public class TelegramAgent extends NotifierAgent {
             newKb.setReplyMarkup(returnMainMenu);
         }
 
+
+    }
+
+    private void handleDeviceSpecific(String path) {
+        //TODO send command correctly
+        List<String> items = List.of(path.split("/"));
+        String device = items.get(0);
+        List<Capabilities> c = onlineDevices.get(device);
+        if (items.size() == 1) {
+            newTxt.setText("Showing " + device + " capabilities");
+            showDeviceCapabilities(device, c);
+        } else {
+            // FIXME maybe a bit over the top
+            if (c.stream().map(Enum::toString).toList().contains(items.get(1))) {
+                Command command = new Command("test command", device, items.get(1));
+                sendCommand(command);
+                newKb.setReplyMarkup(returnMainMenu);
+                newTxt.setText("Interacting with " + items.get(1) + " in " + device);
+            }
+        }
 
     }
 
@@ -323,6 +352,14 @@ public class TelegramAgent extends NotifierAgent {
         logout = true;
     }
 
+    private void showDevicePages() {
+        InlineKeyboardMarkup deviceKeyboard = makeButtonList(onlineDevices.keySet().stream().toList(), onlineDevices.size() > pageLimit, currentIndex);
+        newKb.setReplyMarkup(deviceKeyboard);
+    }
+
+
+    //TODO try to group up makeButtonList and showDeviceCapabilities
+    // they both show a list of buttons but are built in slightly different ways
     private InlineKeyboardMarkup makeButtonList(List<String> devices, boolean usesPagination, int currentPage) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (String device : devices) {
@@ -364,18 +401,51 @@ public class TelegramAgent extends NotifierAgent {
         return keyboardBuilder.build();
     }
 
-    private void showDevicePages() {
-        InlineKeyboardMarkup deviceKeyboard = makeButtonList(onlineDevices, onlineDevices.size() > pageLimit, currentIndex);
-        newKb.setReplyMarkup(deviceKeyboard);
+    private void showDeviceCapabilities(String device, List<Capabilities> capabilities) {
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+        for (Capabilities cap : capabilities) {
+            buttons.add(InlineKeyboardButton.builder().text(cap.toString()).callbackData("devices/" + device + "/" + cap).build());
+        }
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardBuilder = InlineKeyboardMarkup.builder();
+        if (buttons.size() > 0) {
+            for (int i = 0; i < buttons.size(); i += 2) {
+                if (i < buttons.size() - 1) {
+                    keyboardBuilder.keyboardRow(List.of(buttons.get(i), buttons.get(i + 1)));
+                } else {
+                    keyboardBuilder.keyboardRow(List.of(buttons.get(i)));
+                }
+
+            }
+
+        } else {
+            newTxt.setText(Emoji.COLD_SWEAT + " This device has no capabilities installed");
+        }
+        InlineKeyboardButton backButton = InlineKeyboardButton.builder().text(Emoji.LEFT_ARROW + "Go back").callbackData("devices/").build();
+        keyboardBuilder.keyboardRow(List.of(backButton));
+        newKb.setReplyMarkup(keyboardBuilder.build());
+
     }
 
     public void sendHub(int performative, String content, String protocol) {
         ACLMessage msg = new ACLMessage();
-        msg.setSender(new AID(getLocalName(), AID.ISLOCALNAME));
+        msg.setSender(getAID());
         msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
         msg.setContent(content);
         msg.setProtocol(protocol);
         msg.setPerformative(performative);
+        sendMsg(msg);
+    }
+
+    public void sendCommand(Command command) {
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.setSender(getAID());
+        msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
+        msg.setProtocol(Protocols.COMMAND.toString());
+        try {
+            msg.setContentObject(command);
+        } catch (IOException e) {
+            logger.error("Error serializing command");
+        }
         sendMsg(msg);
     }
 
@@ -390,5 +460,9 @@ public class TelegramAgent extends NotifierAgent {
                         msg.toUpperCase() + "\n"
                         + Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING
                 , InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
+    }
+
+    public void commandFinished(String msg) {
+        userIDs.forEach(user -> bot.sendText(user, Emoji.CHECK + " " + msg));
     }
 }
