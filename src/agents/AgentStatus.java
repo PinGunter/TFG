@@ -1,5 +1,5 @@
 package agents;
 
 public enum AgentStatus {
-     LOGIN, RUNNING, LOGOUT, END
+     LOGIN, IDLE, LOGOUT, WARNING, END
 }
