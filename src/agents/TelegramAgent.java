@@ -130,7 +130,7 @@ public class TelegramAgent extends NotifierAgent {
                                 logger.error("Error while deserializing");
                             }
                             onlineDevices.put(cId.getName(), cId.getCapabilities());
-                            notifyUsers(msg.getContent() + " has connected");
+                            notifyUsers(cId.getName() + " has connected");
                         }
                     }
                     case CONTROLLER_LOGOUT -> {
@@ -158,7 +158,6 @@ public class TelegramAgent extends NotifierAgent {
                 }
             }
         }
-
         return logout ? AgentStatus.LOGOUT : AgentStatus.IDLE;
     }
 
@@ -289,7 +288,6 @@ public class TelegramAgent extends NotifierAgent {
     }
 
     private void handleDeviceSpecific(String path) {
-        //TODO send command correctly
         List<String> items = List.of(path.split("/"));
         String device = items.get(0);
         List<Capabilities> c = onlineDevices.get(device);

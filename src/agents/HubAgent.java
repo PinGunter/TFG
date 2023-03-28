@@ -7,7 +7,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
-import utils.Timeout;
+
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -21,9 +21,6 @@ public class HubAgent extends BaseAgent {
     private HashMap<String, List<Capabilities>> devices;
 
     private boolean registered = false;
-
-    private Timeout timer;
-
 
     private HashMap<String, Boolean> devicesConnected;
 
@@ -43,7 +40,6 @@ public class HubAgent extends BaseAgent {
         emergencies = new HashMap<>();
         emergencyStatus = new HashMap<>();
         this.status = AgentStatus.LOGIN;
-        timer = new Timeout();
         timer.setInterval(new TimerTask() {
             @Override
             public void run() {
@@ -206,6 +202,7 @@ public class HubAgent extends BaseAgent {
                 }, warningDelay); // we try to remind the user again
             }
         });
+        //TODO check_connection
         ACLMessage response = receiveMsg(
                 MessageTemplate.and(
                         MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
