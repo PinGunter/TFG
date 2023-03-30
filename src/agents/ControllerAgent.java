@@ -6,11 +6,14 @@ import device.Capabilities;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
+import messages.Emergency;
+import messages.EmergencyStatus;
+import utils.Utils;
 
+import java.io.IOException;
 import java.util.*;
 
 public class ControllerAgent extends ClientAgent {
@@ -19,9 +22,9 @@ public class ControllerAgent extends ClientAgent {
     private List<String> actuators;
 
     private boolean logout = false;
-    private Queue<String> emergencies;
+    private List<Emergency> emergencies;
 
-    private boolean hasCamera = true, hasMicrophone = false, hasSpeakers = false, hasBattery = false, hasScreen = false;
+    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = false, hasBattery = true, hasScreen = false;
     ArrayList<Capabilities> capabilities;
 
 
@@ -30,7 +33,7 @@ public class ControllerAgent extends ClientAgent {
         super.setup();
         status = AgentStatus.LOGIN;
         sensors = new ArrayList<>();
-        emergencies = new ArrayDeque<>();
+        emergencies = new ArrayList<>();
         JADEBoot boot = new JADEBoot();
         boot.Boot("localhost", 1099);
         Object[] args = new Object[1];
@@ -100,10 +103,19 @@ public class ControllerAgent extends ClientAgent {
                 }
                 case WARNING -> {
                     if (msg.getPerformative() == ACLMessage.REQUEST && sensors.contains(sender) && msg.getProtocol().equals(Protocols.WARNING.toString())) {
-                        emergencies.add(msg.getContent());
+                        Emergency em = null;
+                        try {
+                            em = (Emergency) msg.getContentObject();
+                        } catch (UnreadableException e) {
+                            logger.error("Error deserializing");
+                        }
+                        if (em != null) emergencies.add(em);
                     }
                 }
             }
+        }
+        if (emergencies.size() > 0) {
+            return AgentStatus.WARNING;
         }
         return status;
     }
@@ -116,32 +128,60 @@ public class ControllerAgent extends ClientAgent {
 
     public AgentStatus warning() {
         // warn the hub and wait for response
-        if (!emergencies.isEmpty()) {
-            String em = emergencies.poll();
-            if (em != null) {
-                ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
-                m.setProtocol(Protocols.WARNING.toString());
-                m.setContent(em + " - " + getLocalName());
-                m.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                sendMsg(m);
+        emergencies.forEach((emergency) -> {
+            if (emergency.getStatus() == EmergencyStatus.DISCOVERED) {
+                try {
+                    ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                    m.setProtocol(Protocols.WARNING.toString());
+                    m.setContentObject(emergency);
+                    m.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                    sendMsg(m);
+                    emergency.setStatus(EmergencyStatus.ALERTED);
+                } catch (IOException e) {
+                    logger.error("error serializing emergency");
+                }
             }
-        }
+        });
+
 
         ACLMessage response = receiveMsg();
         if (response != null) {
-            if (response.getSender().equals(hub)) {
+            if (response.getSender().getLocalName().equals(hub)) {
                 if (response.getPerformative() == ACLMessage.INFORM && response.getProtocol().equals(Protocols.WARNING.toString())) {
-                    logger.info("Warning finished");
-                    return AgentStatus.IDLE;
+                    Emergency em = null;
+                    try {
+                        em = (Emergency) response.getContentObject();
+                    } catch (UnreadableException e) {
+                        logger.error("Error deserializing");
+                    }
+                    if (em != null) {
+                        Utils.RemoveEmergency(emergencies, em.getMessage());
+                        ACLMessage informSensor = new ACLMessage(ACLMessage.INFORM);
+                        informSensor.setProtocol(Protocols.WARNING.toString());
+                        informSensor.setSender(getAID());
+                        informSensor.addReceiver(em.getOriginSensor());
+                        sendMsg(informSensor);
+                    }
+
                 }
             } else if (sensors.contains(response.getSender().getLocalName())) { // another emergency
                 if (response.getPerformative() == ACLMessage.REQUEST && response.getProtocol().equals(Protocols.WARNING.toString())) {
-                    emergencies.add(response.getContent());
+                    Emergency em = null;
+                    try {
+                        em = (Emergency) response.getContentObject();
+                    } catch (UnreadableException e) {
+                        logger.error("Error deserializing");
+                    }
+                    if (em != null) emergencies.add(em);
                 }
             }
 
         }
-        if
+        if (emergencies.size() == 0) {
+            logger.info("Finished emergency");
+            return AgentStatus.IDLE;
+        }
+        return status;
     }
 
 }

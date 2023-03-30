@@ -5,6 +5,9 @@ import agents.Protocols;
 import device.battery.*;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import messages.Emergency;
+
+import java.io.Serializable;
 
 
 public class BatteryAgent extends SensorAgent {
@@ -45,30 +48,25 @@ public class BatteryAgent extends SensorAgent {
 
     @Override
     public AgentStatus idle() {
-        try {
-            Thread.sleep(pollingPeriod);
-            BatteryStatus bStatus = batteryAccessor.getBatteryStatus();
-            logger.info(bStatus.toString());
-            if (!emergency && bStatus != BatteryStatus.CHARGING && bStatus != BatteryStatus.NOT_CHARGING) { // not plugged in
-                sendAlert();
-            }
-            if (emergency && bStatus == BatteryStatus.CHARGING || bStatus == BatteryStatus.NOT_CHARGING) { // after emergency, plugged back in
-                emergency = false;
-            }
-        } catch (InterruptedException | NoBatteryAccessException e) {
-            logger.error(e.getMessage());
-        }
+        super.idle();
+        checkBattery();
         return AgentStatus.IDLE;
     }
 
-
-    private void sendAlert() {
-        emergency = true;
-        ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
-        m.setProtocol(Protocols.WARNING.toString());
-        m.setSender(getAID());
-        m.addReceiver(deviceController);
-        m.setContent("The power is out");
+    private void checkBattery() {
+        try {
+            BatteryStatus bStatus = batteryAccessor.getBatteryStatus();
+            logger.info(bStatus.toString());
+            if (!emergency && bStatus != BatteryStatus.CHARGING && bStatus != BatteryStatus.NOT_CHARGING) { // not plugged in
+                sendAlert(new Emergency(deviceController, getAID(), "The power is out"));
+            }
+            if (emergency && bStatus == BatteryStatus.CHARGING || bStatus == BatteryStatus.NOT_CHARGING) { // after emergency, plugged back in
+                // TODO maybe confirm to user (pls no)
+            }
+        } catch (NoBatteryAccessException e) {
+            logger.error(e.getMessage());
+        }
     }
+
 
 }
