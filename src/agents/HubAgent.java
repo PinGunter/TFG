@@ -7,7 +7,10 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
-import utils.Timeout;
+import messages.Emergency;
+import messages.EmergencyStatus;
+import utils.Utils;
+
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,13 +25,9 @@ public class HubAgent extends BaseAgent {
 
     private boolean registered = false;
 
-    private Timeout timer;
-
-
     private HashMap<String, Boolean> devicesConnected;
 
-    private HashMap<String, AID> emergencies; // key-value with the emergency and the aid of the device that sent it
-    private HashMap<String, Boolean> emergencyStatus; // stores the state of the emergency (false: hasn't been passed to the user | true : it's been passed)
+    private List<Emergency> emergencies;
 
     private final int warningDelay = 60000;
     private final int connectionStatusDelay = 10000;
@@ -40,10 +39,8 @@ public class HubAgent extends BaseAgent {
         notifiers = new ArrayList<>();
         devices = new HashMap<>();
         devicesConnected = new HashMap<>();
-        emergencies = new HashMap<>();
-        emergencyStatus = new HashMap<>();
+        emergencies = new ArrayList<>();
         this.status = AgentStatus.LOGIN;
-        timer = new Timeout();
         timer.setInterval(new TimerTask() {
             @Override
             public void run() {
@@ -100,9 +97,9 @@ public class HubAgent extends BaseAgent {
             }
             // is a login msg
             if (p == Protocols.CONTROLLER_LOGIN) {
-                /**
-                 * First, we confirm the login, then we communicate the new device
-                 * to the telegram agent
+                /*
+                  First, we confirm the login, then we communicate the new device
+                  to the telegram agent
                  */
                 ControllerID controllerID;
                 try {
@@ -171,8 +168,15 @@ public class HubAgent extends BaseAgent {
                         }
                     }
                     case WARNING -> {
-                        emergencies.put(msg.getContent(), msg.getSender());
-                        emergencyStatus.put(msg.getContent(), false);
+                        Emergency em = null;
+                        try {
+                            em = (Emergency) msg.getContentObject();
+                        } catch (UnreadableException e) {
+                            logger.error("Error deserializing");
+                        }
+                        if (em != null) {
+                            emergencies.add(em);
+                        }
                         return AgentStatus.WARNING;
                     }
                     case COMMAND -> {
@@ -193,19 +197,22 @@ public class HubAgent extends BaseAgent {
     }
 
     public AgentStatus warning() {
-        emergencies.forEach((warning, device) -> {
-            if (!emergencyStatus.get(warning)) {
-                ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
-                m.setContent(warning);
-                m.setProtocol(Protocols.WARNING.toString());
-                notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
-                sendMsg(m);
-                emergencyStatus.put(warning, true);
-                timer.setTimeout(() -> {
-                    emergencyStatus.put(warning, false);
-                }, warningDelay); // we try to remind the user again
+        emergencies.forEach(emergency -> {
+            if (emergency.getStatus() == EmergencyStatus.DISCOVERED) {
+                try {
+                    ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                    m.setContentObject(emergency);
+                    m.setProtocol(Protocols.WARNING.toString());
+                    notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                    sendMsg(m);
+                    emergency.setStatus(EmergencyStatus.ALERTED);
+                    timer.setTimeout(() -> emergency.setStatus(EmergencyStatus.DISCOVERED), warningDelay); // we try to remind the user again
+                } catch (IOException e) {
+                    logger.error("Error serializing");
+                }
             }
         });
+        //TODO check_connection
         ACLMessage response = receiveMsg(
                 MessageTemplate.and(
                         MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
@@ -219,17 +226,31 @@ public class HubAgent extends BaseAgent {
         if (response != null) {
             switch (response.getPerformative()) {
                 case ACLMessage.INFORM -> {
-                    ACLMessage endWarning = new ACLMessage(ACLMessage.INFORM);
-                    endWarning.setSender(getAID());
-                    endWarning.addReceiver(emergencies.get(response.getContent()));
-                    endWarning.setContent(response.getContent());
-                    endWarning.setProtocol(Protocols.WARNING.toString());
-                    sendMsg(endWarning);
-                    emergencies.remove(response.getContent());
+                    try {
+                        Emergency emReceived = (Emergency) response.getContentObject();
+                        ACLMessage endWarning = new ACLMessage(ACLMessage.INFORM);
+                        endWarning.setSender(getAID());
+                        endWarning.addReceiver(emReceived.getOriginDevice());
+                        endWarning.setContentObject(emReceived);
+                        endWarning.setProtocol(Protocols.WARNING.toString());
+                        sendMsg(endWarning);
+                        Utils.RemoveEmergency(emergencies, emReceived.getMessage());
+                    } catch (IOException e) {
+                        logger.error("error serializing");
+                    } catch (UnreadableException e) {
+                        logger.error("error deserializing");
+                    }
+
                 }
                 case ACLMessage.REQUEST -> {
-                    emergencies.put(response.getContent(), response.getSender());
-                    emergencyStatus.put(response.getContent(), false);
+                    try {
+                        Emergency em = (Emergency) response.getContentObject();
+                        if (em != null) {
+                            emergencies.add(em);
+                        }
+                    } catch (UnreadableException e) {
+                        logger.error("Error deserializing");
+                    }
                 }
             }
         }
@@ -249,17 +270,13 @@ public class HubAgent extends BaseAgent {
     public void checkDevices() {
         // dont stop the warning status
         if (status != AgentStatus.WARNING) {
-            for (String s : devicesConnected.keySet()) {
-                devicesConnected.put(s, false);
-            }
+            devicesConnected.replaceAll((s, v) -> false);
             logger.info("Checking online devices");
             ACLMessage m = new ACLMessage();
             m.setPerformative(ACLMessage.QUERY_IF);
             m.setSender(getAID());
             m.setProtocol(Protocols.CHECK_CONNECTION.toString());
-            devices.forEach((device, _capabilities) -> {
-                m.addReceiver(new AID(device, AID.ISLOCALNAME));
-            });
+            devices.forEach((device, _capabilities) -> m.addReceiver(new AID(device, AID.ISLOCALNAME)));
             sendMsg(m);
             timer.setTimeout(this::checkConnectionStatus, connectionStatusDelay); // 10 seconds for devices to send msg back
         }
@@ -271,7 +288,7 @@ public class HubAgent extends BaseAgent {
         devicesConnected.forEach((device, status) -> {
             if (!status) offlineDevices.add(device);
         });
-        offlineDevices.stream().forEach(devices::remove);
+        offlineDevices.forEach(devices::remove);
         ACLMessage m = new ACLMessage();
         m.setPerformative(ACLMessage.INFORM); // TODO es esta?
         m.setSender(getAID());

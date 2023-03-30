@@ -16,6 +16,7 @@ public enum Emoji {
     ERROR("❗"),
 
     NOTIFY("🔔"),
+    LOCATION_PIN("\uD83D\uDCCD"),
     CHECK("✅");
 
 

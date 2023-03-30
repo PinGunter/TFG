@@ -11,6 +11,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import utils.Logger;
+import utils.Timeout;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,6 +29,8 @@ import java.util.Scanner;
 public class BaseAgent extends Agent {
     protected AgentStatus status;
     protected Logger logger;
+    protected Timeout timer;
+
     protected final long WAITANSWERMS = 5000;
 
     public Behaviour defaultBehaviour;
@@ -43,6 +46,7 @@ public class BaseAgent extends Agent {
     @Override
     public void setup() {
         super.setup();
+        timer = new Timeout();
         logger = new Logger();
         logger.setAgentName(getLocalName());
         this.setDefaultBehaviour();
@@ -323,5 +327,5 @@ public class BaseAgent extends Agent {
         res += " @" + msg.getProtocol() + " || RW:" + msg.getReplyWith() + " || IRT:" + msg.getInReplyTo();
         return res;
     }
-    
+
 }

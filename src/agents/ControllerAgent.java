@@ -1,17 +1,20 @@
 package agents;
 
+import agents.sensors.BatteryAgent;
+import appboot.JADEBoot;
 import device.Capabilities;
+
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
-import utils.Timeout;
+import messages.Emergency;
+import messages.EmergencyStatus;
+import utils.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.io.IOException;
+import java.util.*;
 
 public class ControllerAgent extends ClientAgent {
 
@@ -19,12 +22,9 @@ public class ControllerAgent extends ClientAgent {
     private List<String> actuators;
 
     private boolean logout = false;
-    private boolean hasWarned = false;
-    private Timeout timeout;
+    private List<Emergency> emergencies;
 
-    private boolean hasSentEmergency = false;
-
-    private boolean hasCamera, hasMicrophone, hasSpeakers, hasBattery, hasScreen;
+    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = false, hasBattery = true, hasScreen = false;
     ArrayList<Capabilities> capabilities;
 
 
@@ -32,14 +32,16 @@ public class ControllerAgent extends ClientAgent {
     public void setup() {
         super.setup();
         status = AgentStatus.LOGIN;
-        timeout = new Timeout();
+        sensors = new ArrayList<>();
+        emergencies = new ArrayList<>();
+        JADEBoot boot = new JADEBoot();
+        boot.Boot("localhost", 1099);
+        Object[] args = new Object[1];
+        args[0] = getAID();
+        boot.launchAgent("Battery", BatteryAgent.class, args);
+        sensors.add("Battery");
 
-        //TODO this is currently a mockup, when sensors and actuators are done, they will communicate their capabilities
-        hasCamera = new Random().nextBoolean();
-        hasMicrophone = new Random().nextBoolean();
-        hasSpeakers = new Random().nextBoolean();
-        hasBattery = new Random().nextBoolean();
-        hasScreen = new Random().nextBoolean();
+
         capabilities = new ArrayList<>();
         if (hasCamera) capabilities.add(Capabilities.CAMERA);
         if (hasMicrophone) capabilities.add(Capabilities.MICROPHONE);
@@ -70,12 +72,6 @@ public class ControllerAgent extends ClientAgent {
 
 
     public AgentStatus idle() {
-        // TESTING PURPOSES
-        if (!hasSentEmergency) {
-            hasSentEmergency = true;
-            timeout.setTimeout(() -> status = AgentStatus.WARNING, new Random().nextInt(20000, 30000));
-        }
-
         ACLMessage msg = receiveMsg();
 
         if (msg != null) {
@@ -105,7 +101,21 @@ public class ControllerAgent extends ClientAgent {
                         }
                     }
                 }
+                case WARNING -> {
+                    if (msg.getPerformative() == ACLMessage.REQUEST && sensors.contains(sender) && msg.getProtocol().equals(Protocols.WARNING.toString())) {
+                        Emergency em = null;
+                        try {
+                            em = (Emergency) msg.getContentObject();
+                        } catch (UnreadableException e) {
+                            logger.error("Error deserializing");
+                        }
+                        if (em != null) emergencies.add(em);
+                    }
+                }
             }
+        }
+        if (emergencies.size() > 0) {
+            return AgentStatus.WARNING;
         }
         return status;
     }
@@ -118,28 +128,57 @@ public class ControllerAgent extends ClientAgent {
 
     public AgentStatus warning() {
         // warn the hub and wait for response
-        if (!hasWarned) {
-            hasWarned = true;
-            ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
-            m.setProtocol(Protocols.WARNING.toString());
-            m.setContent("EXAMPLE WARNING - " + getLocalName());
-            m.addReceiver(new AID(hub, AID.ISLOCALNAME));
-            sendMsg(m);
-        }
+        emergencies.forEach((emergency) -> {
+            if (emergency.getStatus() == EmergencyStatus.DISCOVERED) {
+                try {
+                    ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                    m.setProtocol(Protocols.WARNING.toString());
+                    m.setContentObject(emergency);
+                    m.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                    sendMsg(m);
+                    emergency.setStatus(EmergencyStatus.ALERTED);
+                } catch (IOException e) {
+                    logger.error("error serializing emergency");
+                }
+            }
+        });
 
-        ACLMessage response = blockingReceiveMsg(
-                MessageTemplate.and(
-                        MessageTemplate.and(
-                                MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
-                                MessageTemplate.MatchPerformative(ACLMessage.INFORM)
-                        ),
-                        MessageTemplate.MatchSender(new AID(hub, AID.ISLOCALNAME))
-                )
-        );
+
+        ACLMessage response = receiveMsg();
         if (response != null) {
-            // maybe process the response msg or fw to the sensor/actuator
-            logger.info("Warning finished");
-            hasWarned = false;
+            if (response.getSender().getLocalName().equals(hub)) {
+                if (response.getPerformative() == ACLMessage.INFORM && response.getProtocol().equals(Protocols.WARNING.toString())) {
+                    Emergency em = null;
+                    try {
+                        em = (Emergency) response.getContentObject();
+                    } catch (UnreadableException e) {
+                        logger.error("Error deserializing");
+                    }
+                    if (em != null) {
+                        Utils.RemoveEmergency(emergencies, em.getMessage());
+                        ACLMessage informSensor = new ACLMessage(ACLMessage.INFORM);
+                        informSensor.setProtocol(Protocols.WARNING.toString());
+                        informSensor.setSender(getAID());
+                        informSensor.addReceiver(em.getOriginSensor());
+                        sendMsg(informSensor);
+                    }
+
+                }
+            } else if (sensors.contains(response.getSender().getLocalName())) { // another emergency
+                if (response.getPerformative() == ACLMessage.REQUEST && response.getProtocol().equals(Protocols.WARNING.toString())) {
+                    Emergency em = null;
+                    try {
+                        em = (Emergency) response.getContentObject();
+                    } catch (UnreadableException e) {
+                        logger.error("Error deserializing");
+                    }
+                    if (em != null) emergencies.add(em);
+                }
+            }
+
+        }
+        if (emergencies.size() == 0) {
+            logger.info("Finished emergency");
             return AgentStatus.IDLE;
         }
         return status;

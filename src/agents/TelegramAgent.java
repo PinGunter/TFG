@@ -6,6 +6,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
+import messages.Emergency;
 import notifiers.TelegramBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -19,8 +20,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
+import utils.Utils;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,7 +48,7 @@ public class TelegramAgent extends NotifierAgent {
 
     private Set<Long> userIDs;
 
-    private List<String> emergencies;
+    private List<Emergency> emergencies;
 
     @Override
     public void setup() {
@@ -117,9 +120,17 @@ public class TelegramAgent extends NotifierAgent {
 
                 switch (p) {
                     case WARNING -> {
-                        // TODO separate msg from emergency
-                        emergencies.add(msg.getContent());
-                        alertUsers(msg.getContent());
+                        Emergency em = null;
+                        try {
+                            em = (Emergency) msg.getContentObject();
+                        } catch (UnreadableException e) {
+                            logger.error("Error deserializing");
+                        }
+                        if (em != null) {
+                            emergencies.add(em);
+                            alertUsers(em.getMessage(), em.getOriginDevice().getLocalName());
+                        }
+
                     }
                     case CONTROLLER_LOGIN -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -130,7 +141,7 @@ public class TelegramAgent extends NotifierAgent {
                                 logger.error("Error while deserializing");
                             }
                             onlineDevices.put(cId.getName(), cId.getCapabilities());
-                            notifyUsers(msg.getContent() + " has connected");
+                            notifyUsers(cId.getName() + " has connected");
                         }
                     }
                     case CONTROLLER_LOGOUT -> {
@@ -143,22 +154,17 @@ public class TelegramAgent extends NotifierAgent {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
                             try {
                                 ArrayList<String> removed = (ArrayList<String>) msg.getContentObject();
-                                removed.forEach(device -> {
-                                    notifyUsers(device + " has disconnected without logging out");
-                                });
+                                removed.forEach(device -> notifyUsers(device + " has disconnected without logging out"));
                                 removed.forEach(onlineDevices::remove);
                             } catch (UnreadableException e) {
                                 logger.error("Error deserializing");
                             }
                         }
                     }
-                    case COMMAND -> {
-                        notifyUsers(msg.getContent());
-                    }
+                    case COMMAND -> notifyUsers(msg.getContent());
                 }
             }
         }
-
         return logout ? AgentStatus.LOGOUT : AgentStatus.IDLE;
     }
 
@@ -275,7 +281,7 @@ public class TelegramAgent extends NotifierAgent {
                     showDevicePages();
 
                 } else if (onlineDevices.containsKey(items.get(1))) {
-                    String newPath = items.subList(1, items.size()).stream().collect(Collectors.joining("/"));
+                    String newPath = String.join("/", items.subList(1, items.size()));
                     handleDeviceSpecific(newPath);
                 }
             }
@@ -289,7 +295,6 @@ public class TelegramAgent extends NotifierAgent {
     }
 
     private void handleDeviceSpecific(String path) {
-        //TODO send command correctly
         List<String> items = List.of(path.split("/"));
         String device = items.get(0);
         List<Capabilities> c = onlineDevices.get(device);
@@ -336,8 +341,12 @@ public class TelegramAgent extends NotifierAgent {
             String emergency = items.get(1);
             newTxt.setText("Alert acknowledged");
             newKb.setReplyMarkup(returnMainMenu);
-            sendHub(ACLMessage.INFORM, emergency, Protocols.WARNING.toString());
-            emergencies.remove(emergency);
+            Emergency em = Utils.findEmergencyByName(emergencies, emergency);
+            if (em != null) {
+                sendHub(ACLMessage.INFORM, em, Protocols.WARNING.toString());
+                Utils.RemoveEmergency(emergencies, emergency);
+            }
+
         }
     }
 
@@ -436,6 +445,20 @@ public class TelegramAgent extends NotifierAgent {
         sendMsg(msg);
     }
 
+    public void sendHub(int performative, Serializable contentObject, String protocol) {
+        try {
+            ACLMessage msg = new ACLMessage();
+            msg.setSender(getAID());
+            msg.addReceiver(new AID(hub, AID.ISLOCALNAME));
+            msg.setContentObject(contentObject);
+            msg.setProtocol(protocol);
+            msg.setPerformative(performative);
+            sendMsg(msg);
+        } catch (IOException e) {
+            logger.error("Error serializing msg to hub");
+        }
+    }
+
     public void sendCommand(Command command) {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.setSender(getAID());
@@ -453,12 +476,12 @@ public class TelegramAgent extends NotifierAgent {
         userIDs.forEach(user -> bot.sendText(user, Emoji.NOTIFY + " " + msg));
     }
 
-    public void alertUsers(String msg) {
+    public void alertUsers(String msg, String origin) {
         InlineKeyboardButton ack = InlineKeyboardButton.builder().text("Acknowledge emergency").callbackData("warning/" + msg).build();
         userIDs.forEach(user -> bot.sendWithKeyboard(user,
                 Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING + "\n" +
-                        msg.toUpperCase() + "\n"
-                        + Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING
+                        msg.toUpperCase() + "\n " + Emoji.LOCATION_PIN + origin + "\n"
+                        + Emoji.WARNING + Emoji.WARNING + Emoji.WARNING
                 , InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
     }
 
