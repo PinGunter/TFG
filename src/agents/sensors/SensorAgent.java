@@ -16,6 +16,12 @@ public abstract class SensorAgent extends BaseAgent {
     protected boolean emergency = false;
 
     @Override
+    public void setup() {
+        super.setup();
+        deviceController = (AID) getArguments()[0];
+    }
+
+    @Override
     public void execute() {
         switch (status) {
             case LOGIN -> status = login();

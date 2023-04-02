@@ -1,9 +1,8 @@
 package agents;
 
-import agents.sensors.BatteryAgent;
+import agents.actuators.SpeakerAgent;
 import appboot.JADEBoot;
 import device.Capabilities;
-
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
@@ -14,7 +13,8 @@ import messages.EmergencyStatus;
 import utils.Utils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ControllerAgent extends ClientAgent {
 
@@ -24,7 +24,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = false, hasBattery = true, hasScreen = false;
+    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = true, hasBattery = false, hasScreen = false;
     ArrayList<Capabilities> capabilities;
 
 
@@ -33,13 +33,18 @@ public class ControllerAgent extends ClientAgent {
         super.setup();
         status = AgentStatus.LOGIN;
         sensors = new ArrayList<>();
+        actuators = new ArrayList<>();
         emergencies = new ArrayList<>();
+
+        // launching sensors and actuators
         JADEBoot boot = new JADEBoot();
         boot.Boot("localhost", 1099);
         Object[] args = new Object[1];
         args[0] = getAID();
-        boot.launchAgent("Battery", BatteryAgent.class, args);
-        sensors.add("Battery");
+//        boot.launchAgent("BATTERY", BatteryAgent.class, args);
+        boot.launchAgent("SPEAKERS", SpeakerAgent.class, args);
+//        sensors.add("BATTERY");
+        actuators.add("SPEAKERS");
 
 
         capabilities = new ArrayList<>();
@@ -88,17 +93,25 @@ public class ControllerAgent extends ClientAgent {
                     if (msg.getPerformative() == ACLMessage.REQUEST && sender.equals(hub)) {
                         try {
                             Command c = (Command) msg.getContentObject();
-                            // TODO here, the controller would send the order to the specific sensor/actuator (command.getTarget())
-                            // since we dont have those yet, its gonna send a confirmation back to the user
-                            ACLMessage confirm = new ACLMessage(ACLMessage.INFORM);
-                            confirm.setContent("ORDER: " + c.getOrder() + " received");
-                            confirm.setSender(getAID());
-                            confirm.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                            confirm.setProtocol(Protocols.COMMAND.toString());
-                            sendMsg(confirm);
+                            if (actuators.contains(c.getTargetDevice()) || sensors.contains(c.getTargetDevice())) {
+                                ACLMessage forward = new ACLMessage(ACLMessage.REQUEST);
+                                forward.setProtocol(Protocols.COMMAND.toString());
+                                forward.setSender(getAID());
+                                forward.addReceiver(new AID(c.getTargetDevice(), AID.ISLOCALNAME));
+                                forward.setContent(c.getOrder());
+                                sendMsg(forward);
+                            }
                         } catch (UnreadableException e) {
                             logger.error("Error while deserializing");
                         }
+                    }
+                    if (msg.getPerformative() == ACLMessage.INFORM) {
+                        ACLMessage confirm = new ACLMessage(ACLMessage.INFORM);
+                        confirm.setContent("ORDER: " + msg.getContent() + " done");
+                        confirm.setSender(getAID());
+                        confirm.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                        confirm.setProtocol(Protocols.COMMAND.toString());
+                        sendMsg(confirm);
                     }
                 }
                 case WARNING -> {

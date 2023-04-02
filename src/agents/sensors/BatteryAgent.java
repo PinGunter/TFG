@@ -1,13 +1,8 @@
 package agents.sensors;
 
 import agents.AgentStatus;
-import agents.Protocols;
 import device.battery.*;
-import jade.core.AID;
-import jade.lang.acl.ACLMessage;
 import messages.Emergency;
-
-import java.io.Serializable;
 
 
 public class BatteryAgent extends SensorAgent {
@@ -23,7 +18,6 @@ public class BatteryAgent extends SensorAgent {
     @Override
     public void setup() {
         super.setup();
-        deviceController = (AID) getArguments()[0];
         status = AgentStatus.IDLE;
         isLinux = System.getProperty("os.name").equals("Linux");
         isWindows = System.getProperty("os.name").equals("Windows");

@@ -25,7 +25,6 @@ import utils.Utils;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class TelegramAgent extends NotifierAgent {
     TelegramBot bot;
@@ -304,7 +303,7 @@ public class TelegramAgent extends NotifierAgent {
         } else {
             // FIXME maybe a bit over the top
             if (c.stream().map(Enum::toString).toList().contains(items.get(1))) {
-                Command command = new Command("test command", device, items.get(1));
+                Command command = new Command("ALARM", device, items.get(1));
                 sendCommand(command);
                 newKb.setReplyMarkup(returnMainMenu);
                 newTxt.setText("Interacting with " + items.get(1) + " in " + device);
