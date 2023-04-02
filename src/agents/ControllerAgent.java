@@ -42,9 +42,9 @@ public class ControllerAgent extends ClientAgent {
         Object[] args = new Object[1];
         args[0] = getAID();
 //        boot.launchAgent("BATTERY", BatteryAgent.class, args);
-        boot.launchAgent("SPEAKERS", SpeakerAgent.class, args);
+        boot.launchAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY");
-        actuators.add("SPEAKERS");
+        actuators.add("SPEAKERS_" + getLocalName());
 
 
         capabilities = new ArrayList<>();
@@ -93,11 +93,12 @@ public class ControllerAgent extends ClientAgent {
                     if (msg.getPerformative() == ACLMessage.REQUEST && sender.equals(hub)) {
                         try {
                             Command c = (Command) msg.getContentObject();
-                            if (actuators.contains(c.getTargetDevice()) || sensors.contains(c.getTargetDevice())) {
+                            String receiver = c.getTargetDevice() + "_" + getLocalName();
+                            if (actuators.contains(receiver) || sensors.contains(receiver)) {
                                 ACLMessage forward = new ACLMessage(ACLMessage.REQUEST);
                                 forward.setProtocol(Protocols.COMMAND.toString());
                                 forward.setSender(getAID());
-                                forward.addReceiver(new AID(c.getTargetDevice(), AID.ISLOCALNAME));
+                                forward.addReceiver(new AID(receiver, AID.ISLOCALNAME));
                                 forward.setContent(c.getOrder());
                                 sendMsg(forward);
                             }
