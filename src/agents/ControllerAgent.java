@@ -1,5 +1,6 @@
 package agents;
 
+import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
 import appboot.JADEBoot;
 import device.Capabilities;
@@ -24,7 +25,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = true, hasBattery = false, hasScreen = false;
+    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
 
 
@@ -44,7 +45,9 @@ public class ControllerAgent extends ClientAgent {
 //        boot.launchAgent("BATTERY", BatteryAgent.class, args);
         boot.launchAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY");
+        boot.launchAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
         actuators.add("SPEAKERS_" + getLocalName());
+        actuators.add("SCREEN_" + getLocalName());
 
 
         capabilities = new ArrayList<>();

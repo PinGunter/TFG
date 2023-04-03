@@ -2,18 +2,19 @@ package agents.actuators;
 
 import agents.AgentStatus;
 import agents.Protocols;
-import device.speakers.Speakers;
+import device.FullScreenWindow;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class SpeakerAgent extends ActuatorAgent {
-    Speakers speakers;
+public class ScreenAgent extends ActuatorAgent {
+
+    FullScreenWindow window;
+
 
     @Override
     public void setup() {
         super.setup();
-        speakers = new Speakers();
-        logger.info("Hello");
+        window = new FullScreenWindow();
     }
 
     @Override
@@ -29,7 +30,7 @@ public class SpeakerAgent extends ActuatorAgent {
         ));
         if (m != null) {
             if (m.getContent().equals("ALARM")) {
-                playAlarm();
+                toggleScreen();
                 ACLMessage res = new ACLMessage(ACLMessage.INFORM);
                 res.setProtocol(Protocols.COMMAND.toString());
                 res.setSender(getAID());
@@ -41,8 +42,8 @@ public class SpeakerAgent extends ActuatorAgent {
         return status;
     }
 
-    void playAlarm() {
-        speakers.playSound("./data/sounds/alarm.wav");
+    void toggleScreen() {
+        logger.info("Toggling screen");
+        window.setVisible(!window.isVisible());
     }
-
 }
