@@ -1,5 +1,7 @@
-package agents;
+package agents.notifiers;
 
+import agents.AgentStatus;
+import agents.Protocols;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -13,6 +15,7 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -22,6 +25,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
 import utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -161,6 +165,15 @@ public class TelegramAgent extends NotifierAgent {
                         }
                     }
                     case COMMAND -> notifyUsers(msg.getContent());
+
+                    case AUDIO -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            File f = new File(msg.getContent());
+                            InputFile inputFile = new InputFile();
+                            inputFile.setMedia(f);
+                            userIDs.forEach(user -> bot.sendVoiceMsg(user, inputFile));
+                        }
+                    }
                 }
             }
         }

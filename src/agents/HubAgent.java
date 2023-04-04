@@ -11,7 +11,6 @@ import messages.Emergency;
 import messages.EmergencyStatus;
 import utils.Utils;
 
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -187,6 +186,17 @@ public class HubAgent extends BaseAgent {
                             m.setContent(msg.getContent());
                             notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
                             sendMsg(m);
+                        }
+                    }
+
+                    case AUDIO -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
+                            forward.setProtocol(Protocols.AUDIO.toString());
+                            forward.setSender(getAID());
+                            notifiers.forEach(n -> forward.addReceiver(new AID(n, AID.ISLOCALNAME)));
+                            forward.setContent(msg.getContent());
+                            sendMsg(forward);
                         }
                     }
                 }

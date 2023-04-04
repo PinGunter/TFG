@@ -4,6 +4,8 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -47,6 +49,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         myExecute(sm);
     }
 
+    public void sendVoiceMsg(Long who, InputFile audio) {
+        SendVoice sendVoice = new SendVoice(who.toString(), audio);
+        myExecute(sendVoice);
+    }
+
     public void sendWithReplyMenu(Long who, String what, InlineKeyboardMarkup kb) {
         SendMessage sm = SendMessage.builder()
                 .chatId(who.toString())
@@ -69,6 +76,14 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 
     public void myExecute(BotApiMethod method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendVoice method) {
         try {
             this.execute(method);
         } catch (TelegramApiException e) {

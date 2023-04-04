@@ -1,5 +1,6 @@
 package agents;
 
+import agents.actuators.MicrophoneAgent;
 import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
 import appboot.JADEBoot;
@@ -25,7 +26,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = false, hasSpeakers = true, hasBattery = false, hasScreen = true;
+    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
 
 
@@ -46,7 +47,9 @@ public class ControllerAgent extends ClientAgent {
         boot.launchAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY");
         boot.launchAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
+        boot.launchAgent("MICROPHONE_" + getLocalName(), MicrophoneAgent.class, args);
         actuators.add("SPEAKERS_" + getLocalName());
+        actuators.add("MICROPHONE_" + getLocalName());
         actuators.add("SCREEN_" + getLocalName());
 
 
@@ -119,7 +122,7 @@ public class ControllerAgent extends ClientAgent {
                     }
                 }
                 case WARNING -> {
-                    if (msg.getPerformative() == ACLMessage.REQUEST && sensors.contains(sender) && msg.getProtocol().equals(Protocols.WARNING.toString())) {
+                    if (msg.getPerformative() == ACLMessage.REQUEST && sensors.contains(sender)) {
                         Emergency em = null;
                         try {
                             em = (Emergency) msg.getContentObject();
@@ -127,6 +130,16 @@ public class ControllerAgent extends ClientAgent {
                             logger.error("Error deserializing");
                         }
                         if (em != null) emergencies.add(em);
+                    }
+                }
+                case AUDIO -> {
+                    if (msg.getPerformative() == ACLMessage.INFORM && actuators.contains(sender)) {
+                        ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
+                        forward.setProtocol(Protocols.AUDIO.toString());
+                        forward.setSender(getAID());
+                        forward.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                        forward.setContent(msg.getContent());
+                        sendMsg(forward);
                     }
                 }
             }
