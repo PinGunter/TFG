@@ -3,7 +3,6 @@ package agents;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.ControllerID;
@@ -223,16 +222,22 @@ public class HubAgent extends BaseAgent {
                 }
             }
         });
-        //TODO check_connection
-        ACLMessage response = receiveMsg(
-                MessageTemplate.and(
-                        MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
-                        MessageTemplate.or(
-                                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
-                        )
-                )
-        );
+
+//        ACLMessage response = receiveMsg(
+//                MessageTemplate.and(
+//                        MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
+//                        MessageTemplate.or(
+//                                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+//                                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
+//                        )
+//                )
+//        );
+
+        ACLMessage response = receiveMsg();
+        if (response != null)
+            if (!(response.getProtocol().equals(Protocols.WARNING.toString()) && (response.getPerformative() == ACLMessage.INFORM || response.getPerformative() == ACLMessage.REQUEST))) {
+                response = null;
+            }
 
         if (response != null) {
             switch (response.getPerformative()) {
@@ -279,30 +284,46 @@ public class HubAgent extends BaseAgent {
     }
 
     public void checkDevices() {
-        // dont stop the warning status
-        if (status != AgentStatus.WARNING) {
-            devicesConnected.replaceAll((s, v) -> false);
-            logger.info("Checking online devices");
-            ACLMessage m = new ACLMessage();
-            m.setPerformative(ACLMessage.QUERY_IF);
-            m.setSender(getAID());
-            m.setProtocol(Protocols.CHECK_CONNECTION.toString());
-            devices.forEach((device, _capabilities) -> m.addReceiver(new AID(device, AID.ISLOCALNAME)));
-            sendMsg(m);
-            timer.setTimeout(this::checkConnectionStatus, connectionStatusDelay); // 10 seconds for devices to send msg back
-        }
+        devicesConnected.replaceAll((s, v) -> false);
+        logger.info("Checking online devices");
+        ACLMessage m = new ACLMessage();
+        m.setPerformative(ACLMessage.QUERY_IF);
+        m.setSender(getAID());
+        m.setProtocol(Protocols.CHECK_CONNECTION.toString());
+        devices.forEach((device, _capabilities) -> m.addReceiver(new AID(device, AID.ISLOCALNAME)));
+        sendMsg(m);
+        timer.setTimeout(this::checkConnectionStatus, connectionStatusDelay);
 
     }
 
     public void checkConnectionStatus() {
         List<String> offlineDevices = new ArrayList<>();
+        List<Emergency> oldEmergencies = new ArrayList<>();
         devicesConnected.forEach((device, status) -> {
-            if (!status) offlineDevices.add(device);
+            if (!status) {
+                logger.info(device + " has not confirmed");
+                offlineDevices.add(device);
+            }
         });
         offlineDevices.forEach(devices::remove);
         offlineDevices.forEach(devicesConnected::remove);
+
+        offlineDevices.forEach(device -> {
+            emergencies.forEach(emergency -> {
+                if (emergency.getOriginDevice().getLocalName().equals(device)) {
+                    oldEmergencies.add(emergency);
+                }
+            });
+        });
+
+        if (oldEmergencies.size() > 0) {
+            emergencies.removeAll(oldEmergencies);
+            logger.info("Se han borrado emergencias");
+            emergencies.forEach(emergency -> System.out.println(emergency.getMessage()));
+        }
+
         ACLMessage m = new ACLMessage();
-        m.setPerformative(ACLMessage.INFORM); // TODO es esta?
+        m.setPerformative(ACLMessage.INFORM);
         m.setSender(getAID());
         m.setProtocol(Protocols.CONTROLLER_DISCONNECT.toString());
         try {
@@ -317,15 +338,6 @@ public class HubAgent extends BaseAgent {
     @Override
     public ACLMessage receiveMsg() {
         ACLMessage msg = receive();
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
-        return confirmConnection(msg);
-    }
-
-    @Override
-    public ACLMessage receiveMsg(MessageTemplate template) {
-        ACLMessage msg = receive(template);
         if (msg != null) {
             logger.message(prettyPrint(msg));
         }
@@ -351,28 +363,13 @@ public class HubAgent extends BaseAgent {
         return confirmConnection(msg);
     }
 
-    @Override
-    public ACLMessage blockingReceiveMsg(MessageTemplate template) {
-        ACLMessage msg = blockingReceive(template);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
-        return confirmConnection(msg);
-    }
-
-    @Override
-    public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
-        ACLMessage msg = blockingReceive(template, milis);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
-        return confirmConnection(msg);
-    }
 
     private ACLMessage confirmConnection(ACLMessage msg) {
         if (msg != null) {
-            if (msg.getPerformative() == ACLMessage.CONFIRM) {
+            logger.info("Protocol:" + msg.getProtocol() + " | Performative: " + ACLMessage.getPerformative(msg.getPerformative()));
+            if (msg.getPerformative() == ACLMessage.CONFIRM && msg.getProtocol().equals(Protocols.CHECK_CONNECTION.toString())) {
                 devicesConnected.put(msg.getSender().getLocalName(), true);
+                logger.info(msg.getSender().getLocalName() + "confirmed");
                 return null;
             }
         }
