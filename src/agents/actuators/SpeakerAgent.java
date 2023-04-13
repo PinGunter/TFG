@@ -13,7 +13,6 @@ public class SpeakerAgent extends ActuatorAgent {
     public void setup() {
         super.setup();
         speakers = new Speakers();
-        logger.info("Hello");
     }
 
     @Override

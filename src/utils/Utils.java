@@ -2,6 +2,7 @@ package utils;
 
 import messages.Emergency;
 
+import java.util.Date;
 import java.util.List;
 
 public class Utils {
@@ -24,5 +25,9 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    public static String dateToString(Date d) {
+        return d.toString().replaceAll(" ", "_").replaceAll(":", "-");
     }
 }

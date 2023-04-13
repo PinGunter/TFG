@@ -20,7 +20,7 @@ public class BatteryAgent extends SensorAgent {
         super.setup();
         status = AgentStatus.IDLE;
         isLinux = System.getProperty("os.name").equals("Linux");
-        isWindows = System.getProperty("os.name").equals("Windows");
+        isWindows = System.getProperty("os.name").contains("Windows");
 
         if (isLinux) {
             batteryAccessor = new LinuxBatteryAccessor();

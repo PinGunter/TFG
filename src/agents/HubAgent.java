@@ -161,11 +161,12 @@ public class HubAgent extends BaseAgent {
                         notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
                         sendMsg(m);
                     }
-                    case CHECK_CONNECTION -> {
-                        if (msg.getPerformative() == ACLMessage.CONFIRM) {
-                            devicesConnected.put(sender, true);
-                        }
-                    }
+                    // not neccessary now
+                    //case CHECK_CONNECTION -> {
+                    //    if (msg.getPerformative() == ACLMessage.CONFIRM) {
+                    //        devicesConnected.put(sender, true);
+                    //    }
+                    //}
                     case WARNING -> {
                         Emergency em = null;
                         try {
@@ -299,6 +300,7 @@ public class HubAgent extends BaseAgent {
             if (!status) offlineDevices.add(device);
         });
         offlineDevices.forEach(devices::remove);
+        offlineDevices.forEach(devicesConnected::remove);
         ACLMessage m = new ACLMessage();
         m.setPerformative(ACLMessage.INFORM); // TODO es esta?
         m.setSender(getAID());
@@ -312,5 +314,68 @@ public class HubAgent extends BaseAgent {
         sendMsg(m);
     }
 
+    @Override
+    public ACLMessage receiveMsg() {
+        ACLMessage msg = receive();
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
 
+    @Override
+    public ACLMessage receiveMsg(MessageTemplate template) {
+        ACLMessage msg = receive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg() {
+        ACLMessage msg = blockingReceive();
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+
+    @Override
+    public ACLMessage blockingReceiveMsg(int milis) {
+        ACLMessage msg = blockingReceive(milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg(MessageTemplate template) {
+        ACLMessage msg = blockingReceive(template);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    @Override
+    public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
+        ACLMessage msg = blockingReceive(template, milis);
+        if (msg != null) {
+            logger.message(prettyPrint(msg));
+        }
+        return confirmConnection(msg);
+    }
+
+    private ACLMessage confirmConnection(ACLMessage msg) {
+        if (msg != null) {
+            if (msg.getPerformative() == ACLMessage.CONFIRM) {
+                devicesConnected.put(msg.getSender().getLocalName(), true);
+                return null;
+            }
+        }
+        return msg;
+    }
 }

@@ -40,7 +40,7 @@ public class ControllerAgent extends ClientAgent {
 
         // launching sensors and actuators
         JADEBoot boot = new JADEBoot();
-        boot.Boot("localhost", 1099);
+        boot.Boot("172.29.125.90", 1099);
         Object[] args = new Object[1];
         args[0] = getAID();
 //        boot.launchAgent("BATTERY", BatteryAgent.class, args);

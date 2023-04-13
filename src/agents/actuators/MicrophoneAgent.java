@@ -5,6 +5,7 @@ import agents.Protocols;
 import device.microphone.Microphone;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import utils.Utils;
 
 import java.time.Instant;
 import java.util.Date;
@@ -50,7 +51,7 @@ public class MicrophoneAgent extends ActuatorAgent {
 
     void startStop() {
         if (!isRecording) {
-            lastRecording = "./temp/" + Date.from(Instant.now());
+            lastRecording = "./temp/" + Utils.dateToString(Date.from(Instant.now()));
             micro.startRecording(lastRecording);
             isRecording = true;
         } else {

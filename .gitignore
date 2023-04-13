@@ -30,3 +30,12 @@ bin/
 
 #environment
 .env
+
+# temp files for audio and photos
+temp/
+
+# super secret stuff
+doJade/
+src/test
+src/tools
+src/appboot
