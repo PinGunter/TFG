@@ -7,6 +7,9 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import utils.Utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Date;
 
@@ -15,7 +18,7 @@ public class MicrophoneAgent extends ActuatorAgent {
     Microphone micro;
     boolean isRecording;
 
-    String lastRecording;
+    String lastRecording; // quizas InputFile de telegram directamente?
 
     @Override
     public void setup() {
@@ -57,12 +60,18 @@ public class MicrophoneAgent extends ActuatorAgent {
         } else {
             micro.stopRecording();
             isRecording = false;
-            ACLMessage audio = new ACLMessage(ACLMessage.INFORM);
-            audio.setProtocol(Protocols.AUDIO.toString());
-            audio.setSender(getAID());
-            audio.addReceiver(deviceController);
-            audio.setContent(lastRecording + ".wav");
-            sendMsg(audio);
+            try {
+                File f = new File(lastRecording + ".wav");
+                byte[] audioFile = Files.readAllBytes(f.toPath());
+                ACLMessage audio = new ACLMessage(ACLMessage.INFORM);
+                audio.setProtocol(Protocols.AUDIO.toString());
+                audio.setSender(getAID());
+                audio.addReceiver(deviceController);
+                audio.setContentObject(audioFile);
+                sendMsg(audio);
+            } catch (IOException e) {
+                logger.error("Error serializing audio");
+            }
         }
     }
 }
