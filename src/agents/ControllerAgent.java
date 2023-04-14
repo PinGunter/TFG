@@ -40,7 +40,7 @@ public class ControllerAgent extends ClientAgent {
         // launching sensors and actuators
         Object[] args = new Object[1];
         args[0] = getAID();
-//        boot.launchAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
+//        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
         launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY_" + getLocalName());
         launchSubAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
@@ -131,12 +131,16 @@ public class ControllerAgent extends ClientAgent {
                 }
                 case AUDIO -> {
                     if (msg.getPerformative() == ACLMessage.INFORM && actuators.contains(sender)) {
-                        ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
-                        forward.setProtocol(Protocols.AUDIO.toString());
-                        forward.setSender(getAID());
-                        forward.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                        forward.setContent(msg.getContent());
-                        sendMsg(forward);
+                        try {
+                            ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
+                            forward.setProtocol(Protocols.AUDIO.toString());
+                            forward.setSender(getAID());
+                            forward.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                            forward.setContentObject(msg.getContentObject());
+                            sendMsg(forward);
+                        } catch (IOException | UnreadableException e) {
+                            logger.error("error forwarding audio");
+                        }
                     }
                 }
             }

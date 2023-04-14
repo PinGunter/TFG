@@ -25,7 +25,6 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
 import utils.Utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -168,10 +167,16 @@ public class TelegramAgent extends NotifierAgent {
 
                     case AUDIO -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
-                            File f = new File(msg.getContent());
-                            InputFile inputFile = new InputFile();
-                            inputFile.setMedia(f);
-                            userIDs.forEach(user -> bot.sendVoiceMsg(user, inputFile));
+                            InputFile inputFile = null;
+                            try {
+                                inputFile = (InputFile) msg.getContentObject();
+                                for (Long user : userIDs) {
+                                    bot.sendVoiceMsg(user, inputFile);
+                                }
+
+                            } catch (UnreadableException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
                     }
                 }

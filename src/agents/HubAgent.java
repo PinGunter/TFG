@@ -191,12 +191,16 @@ public class HubAgent extends BaseAgent {
 
                     case AUDIO -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
-                            ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
-                            forward.setProtocol(Protocols.AUDIO.toString());
-                            forward.setSender(getAID());
-                            notifiers.forEach(n -> forward.addReceiver(new AID(n, AID.ISLOCALNAME)));
-                            forward.setContent(msg.getContent());
-                            sendMsg(forward);
+                            try {
+                                ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
+                                forward.setProtocol(Protocols.AUDIO.toString());
+                                forward.setSender(getAID());
+                                notifiers.forEach(n -> forward.addReceiver(new AID(n, AID.ISLOCALNAME)));
+                                forward.setContentObject(msg.getContentObject());
+                                sendMsg(forward);
+                            } catch (IOException | UnreadableException e) {
+                                logger.error("Error forwarding audio");
+                            }
                         }
                     }
                 }
