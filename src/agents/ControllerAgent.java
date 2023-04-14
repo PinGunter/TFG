@@ -3,8 +3,6 @@ package agents;
 import agents.actuators.MicrophoneAgent;
 import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
-import agents.sensors.BatteryAgent;
-import appboot.JADEBoot;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -27,7 +25,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = true, hasScreen = true;
+    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
 
 
@@ -40,15 +38,13 @@ public class ControllerAgent extends ClientAgent {
         emergencies = new ArrayList<>();
 
         // launching sensors and actuators
-        JADEBoot boot = new JADEBoot();
-        boot.Boot("localhost", 1099);
         Object[] args = new Object[1];
         args[0] = getAID();
-        boot.launchAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
-        boot.launchAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
-        sensors.add("BATTERY_" + getLocalName());
-        boot.launchAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
-        boot.launchAgent("MICROPHONE_" + getLocalName(), MicrophoneAgent.class, args);
+//        boot.launchAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
+        launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
+//        sensors.add("BATTERY_" + getLocalName());
+        launchSubAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
+        launchSubAgent("MICROPHONE_" + getLocalName(), MicrophoneAgent.class, args);
         actuators.add("SPEAKERS_" + getLocalName());
         actuators.add("MICROPHONE_" + getLocalName());
         actuators.add("SCREEN_" + getLocalName());

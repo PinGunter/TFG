@@ -5,11 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/data/settings/.dummy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,6 +173,7 @@
       <workItem from="1680608743323" duration="5768000" />
       <workItem from="1681293843684" duration="8827000" />
       <workItem from="1681421801313" duration="1100000" />
+      <workItem from="1681493293752" duration="3360000" />
     </task>
     <servers />
   </component>

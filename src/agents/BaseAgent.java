@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.MicroRuntime;
 import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -10,9 +11,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
 import utils.Logger;
 import utils.Timeout;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -326,6 +329,28 @@ public class BaseAgent extends Agent {
         res += "] - {" + msg.getContent() + "}";
         res += " @" + msg.getProtocol() + " || RW:" + msg.getReplyWith() + " || IRT:" + msg.getInReplyTo();
         return res;
+    }
+
+    public synchronized void launchSubAgent(String name, Class c, Object[] args) {
+        try {
+            File settings = new File("data/settings/micro.txt");
+            Scanner scanner = new Scanner(settings);
+            String isMicroString = "";
+            while (scanner.hasNext()) {
+                isMicroString = scanner.nextLine();
+            }
+            scanner.close();
+
+            if (isMicroString.equals("true")) {
+                MicroRuntime.startAgent(name, c.getName(), args);
+            } else if (isMicroString.equals("false")) {
+                AgentController ag = getContainerController().createNewAgent(name, c.getName(), args);
+                ag.start();
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
     }
 
 }
