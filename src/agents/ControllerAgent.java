@@ -204,6 +204,22 @@ public class ControllerAgent extends ClientAgent {
                         logger.error("Error deserializing");
                     }
                     if (em != null) emergencies.add(em);
+                } else if (response.getPerformative() == ACLMessage.INFORM && response.getProtocol().equals(Protocols.WARNING.toString())) { // emergency finished by itself
+                    Emergency em = null;
+                    try {
+                        em = (Emergency) response.getContentObject();
+                        if (em != null) {
+                            Utils.RemoveEmergency(emergencies, em.getMessage());
+                            ACLMessage informHub = new ACLMessage(ACLMessage.INFORM);
+                            informHub.setContentObject(em);
+                            informHub.setProtocol(Protocols.WARNING.toString());
+                            informHub.setSender(getAID());
+                            informHub.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                            sendMsg(informHub);
+                        }
+                    } catch (UnreadableException | IOException e) {
+                        logger.error("Error deserializing/serializing");
+                    }
                 }
             }
 

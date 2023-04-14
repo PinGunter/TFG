@@ -223,16 +223,6 @@ public class HubAgent extends BaseAgent {
             }
         });
 
-//        ACLMessage response = receiveMsg(
-//                MessageTemplate.and(
-//                        MessageTemplate.MatchProtocol(Protocols.WARNING.toString()),
-//                        MessageTemplate.or(
-//                                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-//                                MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
-//                        )
-//                )
-//        );
-
         ACLMessage response = receiveMsg();
         if (response != null)
             if (!(response.getProtocol().equals(Protocols.WARNING.toString()) && (response.getPerformative() == ACLMessage.INFORM || response.getPerformative() == ACLMessage.REQUEST))) {

@@ -14,6 +14,7 @@ public class BatteryAgent extends SensorAgent {
 
     private BatteryAccessor batteryAccessor;
 
+    Emergency lastEmergency;
 
     @Override
     public void setup() {
@@ -40,7 +41,6 @@ public class BatteryAgent extends SensorAgent {
         return AgentStatus.IDLE;
     }
 
-    @Override
     public AgentStatus idle() {
         super.idle();
         checkBattery();
@@ -51,12 +51,14 @@ public class BatteryAgent extends SensorAgent {
         try {
             BatteryStatus bStatus = batteryAccessor.getBatteryStatus();
             logger.info(bStatus.toString());
-            if (!emergency && bStatus != BatteryStatus.CHARGING && bStatus != BatteryStatus.NOT_CHARGING) { // not plugged in
-                sendAlert(new Emergency(deviceController, getAID(), "The power is out"));
+            if (!ack && !emergency && bStatus != BatteryStatus.CHARGING && bStatus != BatteryStatus.NOT_CHARGING) { // not plugged in
+                lastEmergency = new Emergency(deviceController, getAID(), "The power is out");
+                sendAlert(lastEmergency);
             }
             if (emergency && bStatus == BatteryStatus.CHARGING || bStatus == BatteryStatus.NOT_CHARGING) { // after emergency, plugged back in
-                // TODO maybe confirm to user (pls no)
+                emergencyFinished(lastEmergency);
             }
+
         } catch (NoBatteryAccessException e) {
             logger.error(e.getMessage());
         }

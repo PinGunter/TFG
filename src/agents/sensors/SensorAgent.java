@@ -15,6 +15,8 @@ public abstract class SensorAgent extends BaseAgent {
 
     protected boolean emergency = false;
 
+    protected boolean ack = false;
+
     @Override
     public void setup() {
         super.setup();
@@ -41,7 +43,7 @@ public abstract class SensorAgent extends BaseAgent {
             ACLMessage m = receiveMsg();
             if (m != null) {
                 if (m.getSender().equals(deviceController) && m.getPerformative() == ACLMessage.INFORM && m.getProtocol().equals(Protocols.WARNING.toString())) {
-                    emergency = false;
+                    ack = true;
                 }
             }
         } catch (InterruptedException e) {
@@ -57,7 +59,23 @@ public abstract class SensorAgent extends BaseAgent {
     protected void sendAlert(Serializable content) {
         try {
             emergency = true;
+            ack = false;
             ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+            m.setProtocol(Protocols.WARNING.toString());
+            m.setSender(getAID());
+            m.addReceiver(deviceController);
+            m.setContentObject(content);
+            sendMsg(m);
+        } catch (IOException e) {
+            logger.error("error serializing emergency");
+        }
+    }
+
+    protected void emergencyFinished(Serializable content) {
+        try {
+            emergency = false;
+            ack = false;
+            ACLMessage m = new ACLMessage(ACLMessage.INFORM);
             m.setProtocol(Protocols.WARNING.toString());
             m.setSender(getAID());
             m.addReceiver(deviceController);

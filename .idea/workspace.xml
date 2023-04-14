@@ -5,36 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env.template" beforeDir="false" afterPath="$PROJECT_DIR$/.env.template" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TFG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/TFG.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/sounds/alarm.wav" beforeDir="false" afterPath="$PROJECT_DIR$/data/sounds/alarm.wav" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/AgentStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/AgentStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/ClientAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ClientAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/Protocols.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/Protocols.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/NotifierAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/NotifierAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/Capabilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/Capabilities.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/battery/BatteryAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/battery/BatteryAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/battery/BatteryStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/battery/BatteryStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/battery/LinuxBatteryAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/battery/LinuxBatteryAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/battery/NoBatteryAccessException.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/battery/NoBatteryAccessException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/battery/WindowsAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/battery/WindowsAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/messages/Command.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/messages/Command.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/messages/ControllerID.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/messages/ControllerID.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Emoji.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Emoji.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Logger.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Logger.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Timeout.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Timeout.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Utils.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +73,7 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.WindowsAccessor">
+  <component name="RunManager" selected="Application.Client">
     <configuration name="Client" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="test.Client" />
       <module name="TFG" />
@@ -166,9 +141,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.WindowsAccessor" />
         <item itemvalue="Application.Client" />
         <item itemvalue="Application.Server" />
+        <item itemvalue="Application.WindowsAccessor" />
         <item itemvalue="Application.Utils" />
         <item itemvalue="Application.Speakers" />
       </list>
