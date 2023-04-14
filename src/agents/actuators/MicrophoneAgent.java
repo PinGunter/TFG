@@ -61,7 +61,7 @@ public class MicrophoneAgent extends ActuatorAgent {
             micro.stopRecording();
             isRecording = false;
             try {
-                File f = new File(lastRecording);
+                File f = new File(lastRecording + ".wav");
                 byte[] audioFile = Files.readAllBytes(f.toPath());
                 ACLMessage audio = new ACLMessage(ACLMessage.INFORM);
                 audio.setProtocol(Protocols.AUDIO.toString());

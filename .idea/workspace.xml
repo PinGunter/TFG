@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/settings/micro.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/settings/micro.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,7 +70,7 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Server">
+  <component name="RunManager" selected="Application.Client">
     <configuration name="Client" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="test.Client" />
       <module name="TFG" />
@@ -140,8 +138,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Server" />
         <item itemvalue="Application.Client" />
+        <item itemvalue="Application.Server" />
         <item itemvalue="Application.WindowsAccessor" />
         <item itemvalue="Application.Utils" />
         <item itemvalue="Application.Speakers" />
@@ -173,7 +171,7 @@
       <workItem from="1680608743323" duration="5768000" />
       <workItem from="1681293843684" duration="8827000" />
       <workItem from="1681421801313" duration="1100000" />
-      <workItem from="1681493293752" duration="7508000" />
+      <workItem from="1681493293752" duration="8493000" />
     </task>
     <servers />
   </component>
