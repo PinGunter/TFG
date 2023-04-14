@@ -5,11 +5,11 @@ import agents.Protocols;
 import device.microphone.Microphone;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Date;
 
@@ -62,12 +62,12 @@ public class MicrophoneAgent extends ActuatorAgent {
             isRecording = false;
             try {
                 File f = new File(lastRecording);
-                InputFile inputFile = new InputFile(f);
+                byte[] audioFile = Files.readAllBytes(f.toPath());
                 ACLMessage audio = new ACLMessage(ACLMessage.INFORM);
                 audio.setProtocol(Protocols.AUDIO.toString());
                 audio.setSender(getAID());
                 audio.addReceiver(deviceController);
-                audio.setContentObject(inputFile);
+                audio.setContentObject(audioFile);
                 sendMsg(audio);
             } catch (IOException e) {
                 logger.error("Error serializing audio");
