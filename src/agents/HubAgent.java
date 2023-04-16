@@ -331,29 +331,20 @@ public class HubAgent extends BaseAgent {
 
     @Override
     public ACLMessage receiveMsg() {
-        ACLMessage msg = receive();
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.receiveMsg();
         return confirmConnection(msg);
     }
 
     @Override
     public ACLMessage blockingReceiveMsg() {
-        ACLMessage msg = blockingReceive();
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg();
         return confirmConnection(msg);
     }
 
 
     @Override
     public ACLMessage blockingReceiveMsg(int milis) {
-        ACLMessage msg = blockingReceive(milis);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg(milis);
         return confirmConnection(msg);
     }
 

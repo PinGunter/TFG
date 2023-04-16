@@ -20,7 +20,7 @@ public abstract class SensorAgent extends BaseAgent {
     @Override
     public void setup() {
         super.setup();
-        deviceController = (AID) getArguments()[0];
+        deviceController = (AID) getArguments()[1];
     }
 
     @Override

@@ -38,8 +38,9 @@ public class ControllerAgent extends ClientAgent {
         emergencies = new ArrayList<>();
 
         // launching sensors and actuators
-        Object[] args = new Object[1];
-        args[0] = getAID();
+        Object[] args = new Object[2];
+        args[0] = cryptKey;
+        args[1] = getAID();
 //        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
         launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY_" + getLocalName());

@@ -11,7 +11,7 @@ public abstract class ActuatorAgent extends BaseAgent {
     public void setup() {
         super.setup();
         status = AgentStatus.LOGIN;
-        deviceController = (AID) getArguments()[0];
+        deviceController = (AID) getArguments()[1];
 
     }
 

@@ -361,7 +361,7 @@ public class TelegramAgent extends NotifierAgent {
             String emergency = items.get(1);
             newTxt.setText("Alert acknowledged");
             newKb.setReplyMarkup(returnMainMenu);
-            Emergency em = Utils.findEmergencyByName(emergencies, emergency);
+            Emergency em = Utils.FindEmergencyByName(emergencies, emergency);
             if (em != null) {
                 sendHub(ACLMessage.INFORM, em, Protocols.WARNING.toString());
                 Utils.RemoveEmergency(emergencies, emergency);
