@@ -14,12 +14,20 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import utils.Logger;
 import utils.Timeout;
+import utils.Utils;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+
 
 /**
  * Base Class for our agents. It's heavily inspired by Luis Castillo's LARVABaseAgent
@@ -46,6 +54,8 @@ public class BaseAgent extends Agent {
 
     protected boolean isRequesting = false;
 
+    protected String cryptKey;
+
     @Override
     public void setup() {
         super.setup();
@@ -53,6 +63,7 @@ public class BaseAgent extends Agent {
         logger = new Logger();
         logger.setAgentName(getLocalName());
         this.setDefaultBehaviour();
+        cryptKey = (String) getArguments()[0];
     }
 
     @Override
@@ -266,6 +277,15 @@ public class BaseAgent extends Agent {
     }
 
     public void sendMsg(ACLMessage msg) {
+        if (msg.getByteSequenceContent() != null) {
+            try {
+                byte[] encrypted = Utils.EncryptObj(msg.getByteSequenceContent(), cryptKey);
+                msg.setByteSequenceContent(encrypted);
+            } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IOException |
+                     IllegalBlockSizeException | BadPaddingException e) {
+                logger.error("Error while encrypting");
+            }
+        }
         logger.message(prettyPrint(msg));
         send(msg);
     }
@@ -273,6 +293,15 @@ public class BaseAgent extends Agent {
     public ACLMessage receiveMsg() {
         ACLMessage msg = receive();
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -281,6 +310,15 @@ public class BaseAgent extends Agent {
     public ACLMessage receiveMsg(MessageTemplate template) {
         ACLMessage msg = receive(template);
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -289,6 +327,15 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg() {
         ACLMessage msg = blockingReceive();
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -297,6 +344,15 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(int milis) {
         ACLMessage msg = blockingReceive(milis);
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -305,6 +361,15 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(MessageTemplate template) {
         ACLMessage msg = blockingReceive(template);
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -313,6 +378,15 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
         ACLMessage msg = blockingReceive(template, milis);
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;

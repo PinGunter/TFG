@@ -54,7 +54,7 @@ public class MicrophoneAgent extends ActuatorAgent {
 
     void startStop() {
         if (!isRecording) {
-            lastRecording = "./temp/" + Utils.dateToString(Date.from(Instant.now()));
+            lastRecording = "./temp/" + Utils.DateToString(Date.from(Instant.now()));
             micro.startRecording(lastRecording);
             isRecording = true;
         } else {
