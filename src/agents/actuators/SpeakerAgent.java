@@ -5,6 +5,10 @@ import agents.Protocols;
 import device.speakers.Speakers;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import messages.Command;
+
+import java.io.IOException;
 
 public class SpeakerAgent extends ActuatorAgent {
     Speakers speakers;
@@ -27,14 +31,21 @@ public class SpeakerAgent extends ActuatorAgent {
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
         ));
         if (m != null) {
-            if (m.getContent().equals("ALARM")) {
-                playAlarm();
-                ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                res.setProtocol(Protocols.COMMAND.toString());
-                res.setSender(getAID());
-                res.addReceiver(deviceController);
-                res.setContent(m.getContent());
-                sendMsg(res);
+            try {
+                Command c = (Command) m.getContentObject();
+                if (c.getOrder().equals("ALARM")) {
+                    playAlarm();
+                    c.setStatus("DONE");
+                    c.setResult("Alarm played", "msg");
+                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                    res.setProtocol(Protocols.COMMAND.toString());
+                    res.setSender(getAID());
+                    res.addReceiver(deviceController);
+                    res.setContentObject(c);
+                    sendMsg(res);
+                }
+            } catch (UnreadableException | IOException e) {
+                logger.error("Error processing command");
             }
         }
         return status;

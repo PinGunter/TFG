@@ -29,5 +29,6 @@ public class Timeout {
 
     public void cancelInterval() {
         timer.cancel();
+        timer = new Timer();
     }
 }

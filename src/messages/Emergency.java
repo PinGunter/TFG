@@ -10,12 +10,26 @@ public class Emergency implements Serializable {
     private EmergencyStatus status;
     private String message;
 
+    private Serializable object;
+
+    private String type;
+
 
     public Emergency(AID originDevice, AID originSensor, String message) {
         this.originDevice = originDevice;
         this.message = message;
         this.originSensor = originSensor;
         status = EmergencyStatus.DISCOVERED;
+        type = "generic";
+    }
+
+    public Emergency(AID originDevice, AID originSensor, String message, String type, Serializable obj) {
+        this.originDevice = originDevice;
+        this.message = message;
+        this.originSensor = originSensor;
+        status = EmergencyStatus.DISCOVERED;
+        this.type = type;
+        this.object = obj;
     }
 
 
@@ -37,5 +51,13 @@ public class Emergency implements Serializable {
 
     public void setStatus(EmergencyStatus es) {
         status = es;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Serializable getObject() {
+        return object;
     }
 }

@@ -180,12 +180,17 @@ public class HubAgent extends BaseAgent {
                     }
                     case COMMAND -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
-                            ACLMessage m = new ACLMessage(ACLMessage.INFORM);
-                            m.setSender(getAID());
-                            m.setProtocol(Protocols.COMMAND.toString());
-                            m.setContent(msg.getContent());
-                            notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
-                            sendMsg(m);
+                            try {
+                                Command command = (Command) msg.getContentObject();
+                                ACLMessage m = new ACLMessage(ACLMessage.INFORM);
+                                m.setSender(getAID());
+                                m.setProtocol(Protocols.COMMAND.toString());
+                                m.setContentObject(command);
+                                notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
+                                sendMsg(m);
+                            } catch (UnreadableException | IOException e) {
+                                logger.error("Error forwarding command");
+                            }
                         }
                     }
 
