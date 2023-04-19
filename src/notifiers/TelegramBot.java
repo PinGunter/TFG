@@ -3,14 +3,18 @@ package notifiers;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class TelegramBot extends TelegramLongPollingBot {
@@ -54,6 +58,28 @@ public class TelegramBot extends TelegramLongPollingBot {
         myExecute(sendVoice);
     }
 
+    public void sendPhoto(Long who, InputFile photo) {
+        SendPhoto sendPhoto = new SendPhoto(who.toString(), photo);
+        myExecute(sendPhoto);
+    }
+
+    public void sendMediaGroup(Long who, List<InputMedia> media) {
+        SendMediaGroup sendMediaGroup = new SendMediaGroup(who.toString(), media);
+        myExecute(sendMediaGroup);
+    }
+
+    public void sendVoiceMsgKbMarkup(Long who, InputFile audio, InlineKeyboardMarkup kb) {
+        SendVoice sendVoice = new SendVoice(who.toString(), audio);
+        sendVoice.setReplyMarkup(kb);
+        myExecute(sendVoice);
+    }
+
+    public void sendPhotoKbMarkup(Long who, InputFile photo, InlineKeyboardMarkup kb) {
+        SendPhoto sendPhoto = new SendPhoto(who.toString(), photo);
+        sendPhoto.setReplyMarkup(kb);
+        myExecute(sendPhoto);
+    }
+    
     public void sendWithReplyMenu(Long who, String what, InlineKeyboardMarkup kb) {
         SendMessage sm = SendMessage.builder()
                 .chatId(who.toString())
@@ -91,5 +117,20 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    public void myExecute(SendPhoto method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendMediaGroup method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
 
 }

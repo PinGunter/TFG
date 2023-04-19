@@ -18,6 +18,8 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
+import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -53,6 +55,8 @@ public class TelegramAgent extends NotifierAgent {
     private Set<Long> userIDs;
 
     private List<Emergency> emergencies;
+
+    private String fullInputPath;
 
     @Override
     public void setup() {
@@ -132,7 +136,13 @@ public class TelegramAgent extends NotifierAgent {
                         }
                         if (em != null) {
                             emergencies.add(em);
-                            alertUsers(em.getMessage(), em.getOriginDevice().getLocalName());
+                            if (em.getType().equals("Motion")) {
+                                InputStream is = new ByteArrayInputStream((byte[]) em.getObject());
+                                InputFile inputFile = new InputFile(is, "image");
+                                alertImage(em.getMessage(), em.getOriginDevice().getLocalName(), inputFile);
+                            } else {
+                                alertUsers(em.getMessage(), em.getOriginDevice().getLocalName());
+                            }
                         }
 
                     }
@@ -165,7 +175,41 @@ public class TelegramAgent extends NotifierAgent {
                             }
                         }
                     }
-                    case COMMAND -> notifyUsers(msg.getContent());
+                    case COMMAND -> {
+                        try {
+                            Command c = (Command) msg.getContentObject();
+                            switch (c.getResultType()) {
+                                case "msg" -> notifyUsers((String) c.getResult());
+                                case "img" -> {
+                                    byte[] image = (byte[]) c.getResult();
+                                    InputStream is = new ByteArrayInputStream(image);
+                                    InputFile inputFile = new InputFile(is, "image");
+                                    for (Long user : userIDs) {
+                                        bot.sendPhoto(user, inputFile);
+                                    }
+                                }
+                                case "burst" -> {
+                                    List<byte[]> burst = (List<byte[]>) c.getResult();
+                                    List<InputMedia> photos = new ArrayList<>();
+                                    for (int i = 0; i < burst.size(); i++) {
+                                        InputStream is = new ByteArrayInputStream(burst.get(i));
+                                        InputMedia inputMedia = new InputMediaPhoto();
+                                        inputMedia.setCaption("Burst captured");
+                                        inputMedia.setMedia(is, "burst" + i);
+                                        photos.add(inputMedia);
+                                    }
+
+                                    for (Long user : userIDs) {
+                                        bot.sendMediaGroup(user, photos);
+                                    }
+
+                                }
+                            }
+
+                        } catch (UnreadableException e) {
+                            logger.error("Error deserializing command");
+                        }
+                    }
 
                     case AUDIO -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -257,6 +301,7 @@ public class TelegramAgent extends NotifierAgent {
         newKb = EditMessageReplyMarkup.builder()
                 .chatId(chatId).messageId(msgId).build();
 
+        fullInputPath = data;
 
         if (data.startsWith("devices/")) {
             handleDevices(data);
@@ -324,10 +369,31 @@ public class TelegramAgent extends NotifierAgent {
         } else {
             // FIXME maybe a bit over the top
             if (c.stream().map(Enum::toString).toList().contains(items.get(1))) {
-                Command command = new Command("ALARM", device, items.get(1));
-                sendCommand(command);
-                newKb.setReplyMarkup(returnMainMenu);
-                newTxt.setText("Interacting with " + items.get(1) + " in " + device);
+                if (items.get(1).equals("CAMERA")) {
+                    if (items.size() < 3) {
+                        // root of camera
+                        InlineKeyboardButton takePictureBtn = InlineKeyboardButton.builder().text("Take Picture").callbackData(fullInputPath + "/single").build();
+                        InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst of 10 photos each second").callbackData(fullInputPath + "/burst").build(); // TODO this is just an example
+                        InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
+                        newKb.setReplyMarkup(kb);
+                        newTxt.setText("Choose an option");
+                    } else {
+                        Command command = new Command("ALARM", device, items.get(1));
+                        if (items.get(2).equals("single")) {
+                            command.setOrder("photo");
+                        } else {
+                            command.setOrder("burst 10 1");
+                        }
+                        sendCommand(command);
+                    }
+
+                } else {
+                    Command command = new Command("ALARM", device, items.get(1));
+                    sendCommand(command);
+                    newKb.setReplyMarkup(returnMainMenu);
+                    newTxt.setText("Interacting with " + items.get(1) + " in " + device);
+                }
+
             }
         }
 
@@ -503,6 +569,16 @@ public class TelegramAgent extends NotifierAgent {
                         msg.toUpperCase() + "\n " + Emoji.LOCATION_PIN + origin + "\n"
                         + Emoji.WARNING + Emoji.WARNING + Emoji.WARNING
                 , InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
+    }
+
+    public void alertImage(String msg, String origin, InputFile photo) {
+        InlineKeyboardButton ack = InlineKeyboardButton.builder().text("Acknowledge emergency").callbackData("warning/" + msg).build();
+        userIDs.forEach(user -> bot.sendText(user,
+                Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING + "\n" +
+                        msg.toUpperCase() + "\n " + Emoji.LOCATION_PIN + origin + "\n"
+                        + Emoji.WARNING + Emoji.WARNING + Emoji.WARNING
+        ));
+        userIDs.forEach(user -> bot.sendPhotoKbMarkup(user, photo, InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
     }
 
     public void commandFinished(String msg) {

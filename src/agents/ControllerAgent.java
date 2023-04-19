@@ -3,6 +3,7 @@ package agents;
 import agents.actuators.MicrophoneAgent;
 import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
+import agents.sensors.CameraAgent;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -25,7 +26,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
+    private boolean hasCamera = true, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
 
 
@@ -38,9 +39,11 @@ public class ControllerAgent extends ClientAgent {
         emergencies = new ArrayList<>();
 
         // launching sensors and actuators
-        Object[] args = new Object[2];
+        Object[] args = new Object[3];
         args[0] = cryptKey;
         args[1] = getAID();
+        args[2] = true; // motion detection
+
 //        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
         launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
 //        sensors.add("BATTERY_" + getLocalName());
@@ -49,6 +52,8 @@ public class ControllerAgent extends ClientAgent {
         actuators.add("SPEAKERS_" + getLocalName());
         actuators.add("MICROPHONE_" + getLocalName());
         actuators.add("SCREEN_" + getLocalName());
+        launchSubAgent("CAMERA_" + getLocalName(), CameraAgent.class, args);
+        sensors.add("CAMERA_" + getLocalName());
 
 
         capabilities = new ArrayList<>();
@@ -103,20 +108,27 @@ public class ControllerAgent extends ClientAgent {
                                 forward.setProtocol(Protocols.COMMAND.toString());
                                 forward.setSender(getAID());
                                 forward.addReceiver(new AID(receiver, AID.ISLOCALNAME));
-                                forward.setContent(c.getOrder());
+                                forward.setContentObject(c);
                                 sendMsg(forward);
                             }
                         } catch (UnreadableException e) {
                             logger.error("Error while deserializing");
+                        } catch (IOException e) {
+                            logger.error("Error forwarding command");
                         }
                     }
                     if (msg.getPerformative() == ACLMessage.INFORM) {
-                        ACLMessage confirm = new ACLMessage(ACLMessage.INFORM);
-                        confirm.setContent("ORDER: " + msg.getContent() + " done");
-                        confirm.setSender(getAID());
-                        confirm.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                        confirm.setProtocol(Protocols.COMMAND.toString());
-                        sendMsg(confirm);
+                        try {
+                            Command c = (Command) msg.getContentObject();
+                            ACLMessage confirm = new ACLMessage(ACLMessage.INFORM);
+                            confirm.setContentObject(c);
+                            confirm.setSender(getAID());
+                            confirm.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                            confirm.setProtocol(Protocols.COMMAND.toString());
+                            sendMsg(confirm);
+                        } catch (UnreadableException | IOException e) {
+                            logger.error("Error forwarding command from device");
+                        }
                     }
                 }
                 case WARNING -> {

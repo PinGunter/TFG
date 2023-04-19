@@ -5,6 +5,10 @@ import agents.Protocols;
 import device.FullScreenWindow;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import messages.Command;
+
+import java.io.IOException;
 
 public class ScreenAgent extends ActuatorAgent {
 
@@ -29,14 +33,21 @@ public class ScreenAgent extends ActuatorAgent {
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
         ));
         if (m != null) {
-            if (m.getContent().equals("ALARM")) {
-                toggleScreen();
-                ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                res.setProtocol(Protocols.COMMAND.toString());
-                res.setSender(getAID());
-                res.addReceiver(deviceController);
-                res.setContent(m.getContent());
-                sendMsg(res);
+            try {
+                Command c = (Command) m.getContentObject();
+                if (c.getOrder().equals("ALARM")) {
+                    toggleScreen();
+                    c.setStatus("DONE");
+                    c.setResult("Screen " + (window.isVisible() ? "on" : "off"), "msg");
+                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                    res.setProtocol(Protocols.COMMAND.toString());
+                    res.setSender(getAID());
+                    res.addReceiver(deviceController);
+                    res.setContentObject(c);
+                    sendMsg(res);
+                }
+            } catch (UnreadableException | IOException e) {
+                logger.error("Error processing command");
             }
         }
         return status;
