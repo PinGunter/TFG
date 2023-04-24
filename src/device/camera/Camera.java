@@ -35,6 +35,7 @@ public class Camera implements WebcamMotionListener {
                 detector = new WebcamMotionDetector(webcam);
                 onMotion = onMotionEvent;
                 detector.setInterval(interval);
+                detector.setPixelThreshold(100);
                 detector.addMotionListener(this);
                 detector.setPixelThreshold(50);
             }
@@ -89,8 +90,6 @@ public class Camera implements WebcamMotionListener {
 
     @Override
     public void motionDetected(WebcamMotionEvent webcamMotionEvent) {
-        System.out.println("MOTION====================");
         onMotion.accept(webcamMotionEvent);
     }
-
 }

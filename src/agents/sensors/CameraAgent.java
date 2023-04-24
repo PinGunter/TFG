@@ -11,6 +11,7 @@ import messages.Command;
 import messages.Emergency;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class CameraAgent extends SensorAgent {
     Camera camera;
     boolean motionDetectionEnabled;
 
-    int interval = 2000;
+    int interval = 5000;
 
     @Override
     public void setup() {
@@ -43,12 +44,31 @@ public class CameraAgent extends SensorAgent {
     void onMotion(WebcamMotionEvent event) {
         logger.info("motion detected");
         try {
-            BufferedImage image = event.getCurrentImage();
+            Color c = new Color(50, 200, 0);
+            BufferedImage img = event.getCurrentImage();
+            ArrayList<Point> points = event.getPoints();
+            int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+            for (Point p : points) {
+                if (p.x < minX) minX = p.x;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+            }
+            // top and bottom lines
+            for (int i = minX; i <= maxX; i++) {
+                img.setRGB(i, minY, c.getRGB());
+                img.setRGB(i, maxY, c.getRGB());
+            }
+            // left and right ones
+            for (int i = minY; i <= maxY; i++) {
+                img.setRGB(minX, i, c.getRGB());
+                img.setRGB(maxX, i, c.getRGB());
+            }
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ImageIO.write(image, "jpg", bos);
+            ImageIO.write(img, "jpg", bos);
             sendAlert(new Emergency(deviceController, getAID(), "Motion detected", "Motion", bos.toByteArray()));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error writing img");
         }
     }
 
