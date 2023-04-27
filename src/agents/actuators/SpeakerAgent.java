@@ -7,6 +7,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
+import messages.CommandStatus;
 
 import java.io.IOException;
 
@@ -35,7 +36,7 @@ public class SpeakerAgent extends ActuatorAgent {
                 Command c = (Command) m.getContentObject();
                 if (c.getOrder().equals("ALARM")) {
                     playAlarm();
-                    c.setStatus("DONE");
+                    c.setStatus(CommandStatus.DONE);
                     c.setResult("Alarm played", "msg");
                     ACLMessage res = new ACLMessage(ACLMessage.INFORM);
                     res.setProtocol(Protocols.COMMAND.toString());

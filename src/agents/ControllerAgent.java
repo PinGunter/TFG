@@ -42,7 +42,7 @@ public class ControllerAgent extends ClientAgent {
         Object[] args = new Object[3];
         args[0] = cryptKey;
         args[1] = getAID();
-        args[2] = true; // motion detection
+        args[2] = false; // motion detection
 
 //        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
         launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
@@ -140,20 +140,6 @@ public class ControllerAgent extends ClientAgent {
                             logger.error("Error deserializing");
                         }
                         if (em != null) emergencies.add(em);
-                    }
-                }
-                case AUDIO -> {
-                    if (msg.getPerformative() == ACLMessage.INFORM && actuators.contains(sender)) {
-                        try {
-                            ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
-                            forward.setProtocol(Protocols.AUDIO.toString());
-                            forward.setSender(getAID());
-                            forward.addReceiver(new AID(hub, AID.ISLOCALNAME));
-                            forward.setContentObject(msg.getContentObject());
-                            sendMsg(forward);
-                        } catch (IOException | UnreadableException e) {
-                            logger.error("error forwarding audio");
-                        }
                     }
                 }
             }

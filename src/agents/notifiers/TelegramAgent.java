@@ -58,6 +58,8 @@ public class TelegramAgent extends NotifierAgent {
 
     private String fullInputPath;
 
+    private boolean isRecordingAudio;
+
     @Override
     public void setup() {
         // agent setup
@@ -87,6 +89,8 @@ public class TelegramAgent extends NotifierAgent {
 
         // pagination
         currentIndex = 0;
+
+        isRecordingAudio = false;
 
 
         onlineDevices = new HashMap<>();
@@ -178,52 +182,58 @@ public class TelegramAgent extends NotifierAgent {
                     case COMMAND -> {
                         try {
                             Command c = (Command) msg.getContentObject();
-                            switch (c.getResultType()) {
-                                case "msg" -> notifyUsers((String) c.getResult());
-                                case "img" -> {
-                                    byte[] image = (byte[]) c.getResult();
-                                    InputStream is = new ByteArrayInputStream(image);
-                                    InputFile inputFile = new InputFile(is, "image");
-                                    for (Long user : userIDs) {
-                                        bot.sendPhoto(user, inputFile);
+                            switch (c.getStatus()) {
+                                case DONE -> {
+                                    switch (c.getResultType()) {
+                                        case "msg" -> notifyUsers((String) c.getResult());
+                                        case "img" -> {
+                                            byte[] image = (byte[]) c.getResult();
+                                            InputStream is = new ByteArrayInputStream(image);
+                                            InputFile inputFile = new InputFile(is, "image");
+                                            for (Long user : userIDs) {
+                                                bot.sendPhoto(user, inputFile);
+                                            }
+                                        }
+                                        case "burst" -> {
+                                            List<byte[]> burst = (List<byte[]>) c.getResult();
+                                            List<InputMedia> photos = new ArrayList<>();
+                                            for (int i = 0; i < burst.size(); i++) {
+                                                InputStream is = new ByteArrayInputStream(burst.get(i));
+                                                InputMedia inputMedia = new InputMediaPhoto();
+                                                inputMedia.setCaption("Burst captured");
+                                                inputMedia.setMedia(is, "burst" + i);
+                                                photos.add(inputMedia);
+                                            }
+
+                                            for (Long user : userIDs) {
+                                                bot.sendMediaGroup(user, photos);
+                                            }
+
+                                        }
+                                        case "audio" -> {
+                                            byte[] byteArray = (byte[]) c.getResult();
+                                            InputStream is = new ByteArrayInputStream(byteArray);
+                                            InputFile inputFile = new InputFile(is, "audio_recording");
+                                            for (Long user : userIDs) {
+                                                bot.sendVoiceMsg(user, inputFile);
+                                            }
+                                            notifyUsers("Stopped recording");
+                                            isRecordingAudio = false;
+                                        }
                                     }
                                 }
-                                case "burst" -> {
-                                    List<byte[]> burst = (List<byte[]>) c.getResult();
-                                    List<InputMedia> photos = new ArrayList<>();
-                                    for (int i = 0; i < burst.size(); i++) {
-                                        InputStream is = new ByteArrayInputStream(burst.get(i));
-                                        InputMedia inputMedia = new InputMediaPhoto();
-                                        inputMedia.setCaption("Burst captured");
-                                        inputMedia.setMedia(is, "burst" + i);
-                                        photos.add(inputMedia);
-                                    }
-
+                                case IN_PROGRESS -> {
+                                    if (c.getResultType().equals("audio")) isRecordingAudio = true;
+                                    notifyUsers((String) c.getResult());
+                                }
+                                case FAILURE -> {
                                     for (Long user : userIDs) {
-                                        bot.sendMediaGroup(user, photos);
+                                        bot.sendText(user, Emoji.ERROR.toString() + c.getResult());
                                     }
-
                                 }
                             }
-
                         } catch (UnreadableException e) {
                             logger.error("Error deserializing command");
-                        }
-                    }
-
-                    case AUDIO -> {
-                        if (msg.getPerformative() == ACLMessage.INFORM) {
-                            try {
-                                byte[] byteArray = (byte[]) msg.getContentObject();
-                                InputStream is = new ByteArrayInputStream(byteArray);
-                                InputFile inputFile = new InputFile(is, "audio_recording");
-                                for (Long user : userIDs) {
-                                    bot.sendVoiceMsg(user, inputFile);
-                                }
-
-                            } catch (UnreadableException e) {
-                                throw new RuntimeException(e);
-                            }
                         }
                     }
                 }
@@ -367,31 +377,78 @@ public class TelegramAgent extends NotifierAgent {
             newTxt.setText("Showing " + device + " capabilities");
             showDeviceCapabilities(device, c);
         } else {
-            // FIXME maybe a bit over the top
             if (c.stream().map(Enum::toString).toList().contains(items.get(1))) {
-                if (items.get(1).equals("CAMERA")) {
-                    if (items.size() < 3) {
-                        // root of camera
-                        InlineKeyboardButton takePictureBtn = InlineKeyboardButton.builder().text("Take Picture").callbackData(fullInputPath + "/single").build();
-                        InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst of 10 photos each second").callbackData(fullInputPath + "/burst").build(); // TODO this is just an example
-                        InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
-                        newKb.setReplyMarkup(kb);
-                        newTxt.setText("Choose an option");
-                    } else {
-                        Command command = new Command("ALARM", device, items.get(1));
-                        if (items.get(2).equals("single")) {
-                            command.setOrder("photo");
+                switch (items.get(1)) {
+                    case "CAMERA" -> {
+                        if (items.size() < 3) {
+                            // root of camera
+                            InlineKeyboardButton takePictureBtn = InlineKeyboardButton.builder().text("Take Picture").callbackData(fullInputPath + "/single").build();
+                            InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst of 10 photos each second").callbackData(fullInputPath + "/burst").build(); // TODO this is just an example
+                            InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
+                            newKb.setReplyMarkup(kb);
+                            newTxt.setText("Choose an option");
                         } else {
-                            command.setOrder("burst 10 1");
+                            Command command = new Command("ALARM", device, items.get(1));
+                            if (items.get(2).equals("single")) {
+                                command.setOrder("photo");
+                            } else {
+                                command.setOrder("burst 10 1");
+                            }
+                            sendCommand(command);
                         }
-                        sendCommand(command);
                     }
-
-                } else {
-                    Command command = new Command("ALARM", device, items.get(1));
-                    sendCommand(command);
-                    newKb.setReplyMarkup(returnMainMenu);
-                    newTxt.setText("Interacting with " + items.get(1) + " in " + device);
+                    case "SCREEN" -> {
+                        if (items.size() < 3) {
+                            InlineKeyboardButton toggleScreen = InlineKeyboardButton.builder().text("Toggle Screen").callbackData(fullInputPath + "/toggle").build();
+                            InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(toggleScreen)).keyboardRow(List.of(returnMainMenuBtn)).build();
+                            newKb.setReplyMarkup(kb);
+                            newTxt.setText("Screen options");
+                        } else {
+                            Command command = new Command("toggle", device, items.get(1));
+                            sendCommand(command);
+                            newKb.setReplyMarkup(returnMainMenu);
+                            newTxt.setText("Screen toggled");
+                        }
+                    }
+                    case "MICROPHONE" -> {
+                        if (items.size() < 3) {
+                            InlineKeyboardMarkup.InlineKeyboardMarkupBuilder kb = InlineKeyboardMarkup.builder();
+                            if (!isRecordingAudio) {
+                                int[] seconds_template = {10, 15, 30, 60};
+                                for (int i = 0; i < seconds_template.length; i += 2) {
+                                    InlineKeyboardButton btn = InlineKeyboardButton.builder().text(seconds_template[i] + " s").callbackData(fullInputPath + "/record/" + seconds_template[i]).build();
+                                    InlineKeyboardButton btn2 = InlineKeyboardButton.builder().text(seconds_template[i + 1] + " s").callbackData(fullInputPath + "/record/" + seconds_template[i + 1]).build();
+                                    kb.keyboardRow(List.of(btn, btn2));
+                                }
+                            }
+                            kb.keyboardRow(List.of(InlineKeyboardButton.builder().text(isRecordingAudio ? "Stop recording" : "Start recording (3min max)").callbackData(fullInputPath + "/record/startstop").build()));
+                            newKb.setReplyMarkup(kb.build());
+                            newTxt.setText("Select an option");
+                        } else {
+                            if (items.get(2).equals("record")) {
+                                newKb.setReplyMarkup(returnMainMenu);
+                                if (items.get(3).equals("startstop")) {
+                                    sendCommand(new Command("startstop", device, items.get(1)));
+                                } else {
+                                    int seconds = -1;
+                                    try {
+                                        seconds = Integer.parseInt(items.get(3));
+                                    } catch (NumberFormatException e) {
+                                        seconds = -1;
+                                    }
+                                    if (seconds != -1) {
+                                        sendCommand(new Command("record " + seconds, device, items.get(1)));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    default -> {
+                        Command command = new Command("ALARM", device, items.get(1));
+                        sendCommand(command);
+                        newKb.setReplyMarkup(returnMainMenu);
+                        newTxt.setText("Interacting with " + items.get(1) + " in " + device);
+                    }
                 }
 
             }

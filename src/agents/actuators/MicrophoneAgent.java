@@ -7,20 +7,17 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
-import utils.Utils;
+import messages.CommandStatus;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.util.Date;
 
 public class MicrophoneAgent extends ActuatorAgent {
 
     Microphone micro;
     boolean isRecording;
 
-    String lastRecording; // quizas InputFile de telegram directamente?
+    Command lastCommand;
+
 
     @Override
     public void setup() {
@@ -43,16 +40,43 @@ public class MicrophoneAgent extends ActuatorAgent {
         if (m != null) {
             try {
                 Command c = (Command) m.getContentObject();
-                if (c.getOrder().equals("ALARM")) {
-                    startStop();
-                    c.setStatus("DONE");
-                    c.setResult("Recorded audio", "msg"); //TODO for now -> change to command type, etc
-                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                    res.setProtocol(Protocols.COMMAND.toString());
-                    res.setSender(getAID());
-                    res.addReceiver(deviceController);
-                    res.setContentObject(c);
-                    sendMsg(res);
+                logger.info("COMMAND RECEIVED " + c.getOrder());
+                if (c.getOrder().startsWith("record")) {
+                    int seconds = Integer.parseInt(c.getOrder().split(" ")[1]);
+                    if (start(seconds + 1)) { // +1 because its always a second short
+                        lastCommand = c;
+                        c.setStatus(CommandStatus.IN_PROGRESS);
+                        c.setResult("Started recording", "msg");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+                    } else { // already recording
+                        c.setStatus(CommandStatus.FAILURE);
+                        c.setResult("A recording was already in progress", "err");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+                    }
+                } else if (c.getOrder().equals("startstop")) {
+                    if (start()) {
+                        lastCommand = c;
+                        c.setStatus(CommandStatus.IN_PROGRESS);
+                        c.setResult("Started recording", "audio");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+                    } else { // already recording
+                        stop();
+                    }
                 }
             } catch (UnreadableException | IOException e) {
                 logger.error("Error processing command");
@@ -61,26 +85,38 @@ public class MicrophoneAgent extends ActuatorAgent {
         return status;
     }
 
-    void startStop() {
+
+    boolean start() {
+        return start(3 * 60); // 3 minute max
+    }
+
+    boolean start(int seconds) {
         if (!isRecording) {
-            lastRecording = "./temp/" + Utils.DateToString(Date.from(Instant.now()));
-            micro.startRecording(lastRecording);
+            micro.startRecording();
             isRecording = true;
-        } else {
-            micro.stopRecording();
+            timer.setTimeout(this::stop, seconds * 1000);
+            return true;
+        }
+        return false;
+    }
+
+    void stop() {
+        if (isRecording) {
+            byte[] audioFile = micro.stopRecording();
             isRecording = false;
             try {
-                File f = new File(lastRecording + ".wav");
-                byte[] audioFile = Files.readAllBytes(f.toPath());
-                ACLMessage audio = new ACLMessage(ACLMessage.INFORM);
-                audio.setProtocol(Protocols.AUDIO.toString());
-                audio.setSender(getAID());
-                audio.addReceiver(deviceController);
-                audio.setContentObject(audioFile);
-                sendMsg(audio);
+                lastCommand.setStatus(CommandStatus.DONE);
+                lastCommand.setResult(audioFile, "audio");
+                ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                res.setProtocol(Protocols.COMMAND.toString());
+                res.setSender(getAID());
+                res.addReceiver(deviceController);
+                res.setContentObject(lastCommand);
+                sendMsg(res);
             } catch (IOException e) {
                 logger.error("Error serializing audio");
             }
         }
     }
+
 }
