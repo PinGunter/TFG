@@ -8,6 +8,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
+import messages.CommandStatus;
 import messages.Emergency;
 
 import javax.imageio.ImageIO;
@@ -83,7 +84,7 @@ public class CameraAgent extends SensorAgent {
                 Command c = (Command) m.getContentObject();
                 if (c.getOrder().equals("photo") || c.getOrder().equals("ALARM")) { //TODO the ALARM is for easy of use. Will be changed to be better
                     byte[] image = camera.getImage();
-                    c.setStatus("DONE");
+                    c.setStatus(CommandStatus.DONE);
                     c.setResult(image, "img");
                     ACLMessage response = new ACLMessage(ACLMessage.INFORM);
                     response.setProtocol(Protocols.COMMAND.toString());
@@ -102,7 +103,7 @@ public class CameraAgent extends SensorAgent {
                         ImageIO.write(burst.get(i), "jpg", bos);
                         photos.add(bos.toByteArray());
                     }
-                    c.setStatus("DONE");
+                    c.setStatus(CommandStatus.DONE);
                     c.setResult(photos, "burst");
                     ACLMessage response = new ACLMessage(ACLMessage.INFORM);
                     response.setProtocol(Protocols.COMMAND.toString());

@@ -7,7 +7,7 @@ public class FullScreenWindow extends JFrame {
     public FullScreenWindow() {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setTitle("Domotic Alerts");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setBackground(Color.WHITE);
     }
 

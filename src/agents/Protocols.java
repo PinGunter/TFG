@@ -11,8 +11,6 @@ public enum Protocols {
     NOTIFIER_LOGOUT("NOTIFIER_LOGOUT"),
 
     CONTROLLER_DISCONNECT("CONTROLLER_DISCONNECT"),
-    AUDIO("AUDIO"),
-
     NULL("");
     private String name;
 

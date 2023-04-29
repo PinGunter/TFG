@@ -15,7 +15,7 @@ public class Command implements Serializable {
 
     private Serializable result;
 
-    private String status;
+    private CommandStatus status;
 
     private String resultType;
 
@@ -23,7 +23,7 @@ public class Command implements Serializable {
         this.order = order;
         this.targetDevice = targetDevice;
         this.targetChild = targetChild;
-        this.status = "CREATED";
+        this.status = CommandStatus.CREATED;
     }
 
     public String getOrder() {
@@ -38,7 +38,7 @@ public class Command implements Serializable {
         return targetChild;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(CommandStatus status) {
         this.status = status;
     }
 
@@ -59,7 +59,7 @@ public class Command implements Serializable {
         return resultType;
     }
 
-    public String getStatus() {
+    public CommandStatus getStatus() {
         return status;
     }
 }
