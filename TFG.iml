@@ -12,5 +12,6 @@
     <orderEntry type="library" name="io.github.cdimascio.dotenv.java" level="project" />
     <orderEntry type="library" name="net.java.dev.jna" level="project" />
     <orderEntry type="library" name="github.sarxos.webcam.capture" level="project" />
+    <orderEntry type="library" name="squareup.gifencoder" level="project" />
   </component>
 </module>

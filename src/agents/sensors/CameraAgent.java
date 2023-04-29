@@ -10,6 +10,7 @@ import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.CommandStatus;
 import messages.Emergency;
+import utils.Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -97,43 +98,22 @@ public class CameraAgent extends SensorAgent {
                     int interval = Integer.parseInt(c.getOrder().split(" ")[2]) * 1000;
                     //TODO in the future send an acknowledged message to show that is running the command
                     ArrayList<BufferedImage> burst = camera.startBurst(n, interval);
-                    ArrayList<byte[]> photos = new ArrayList<>(burst.size());
-                    for (int i = 0; i < n; i++) {
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        ImageIO.write(burst.get(i), "jpg", bos);
-                        photos.add(bos.toByteArray());
-                    }
+//                    ArrayList<byte[]> photos = new ArrayList<>(burst.size());
+//                    for (int i = 0; i < n; i++) {
+//                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//                        ImageIO.write(burst.get(i), "jpg", bos);
+//                        photos.add(bos.toByteArray());
+//                    }
+                    byte[] gif = Utils.CreateGIF(burst, interval / 2);
                     c.setStatus(CommandStatus.DONE);
-                    c.setResult(photos, "burst");
+                    c.setResult(gif, "burst");
                     ACLMessage response = new ACLMessage(ACLMessage.INFORM);
                     response.setProtocol(Protocols.COMMAND.toString());
                     response.setSender(getAID());
                     response.addReceiver(deviceController);
                     response.setContentObject(c);
                     sendMsg(response);
-//                    camera.startBurst(n, interval, (burst) -> {
-//                        try {
-//                            burst.forEach(photo -> {
-//                                try {
-//                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//                                    ImageIO.write(photo, "jpg", bos);
-//                                    photos.add(bos.toByteArray());
-//                                } catch (IOException e) {
-//                                    logger.error("Error processing burst");
-//                                }
-//                            });
-//                            c.setStatus("DONE");
-//                            c.setResult(photos, "burst");
-//                            ACLMessage response = new ACLMessage(ACLMessage.INFORM);
-//                            response.setProtocol(Protocols.COMMAND.toString());
-//                            response.setSender(getAID());
-//                            response.addReceiver(deviceController);
-//                            response.setContentObject(c);
-//                            sendMsg(response);
-//                        } catch (IOException e) {
-//                            logger.error("Error getting burst");
-//                        }
-//                    });
+
 
                 }
             } catch (UnreadableException | IOException e) {

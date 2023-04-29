@@ -3,10 +3,7 @@ package notifiers;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
@@ -63,6 +60,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         myExecute(sendPhoto);
     }
 
+    public void sendAnimation(Long who, InputFile animation) {
+        SendAnimation sendAnimation = new SendAnimation(who.toString(), animation);
+        myExecute(sendAnimation);
+    }
+
     public void sendMediaGroup(Long who, List<InputMedia> media) {
         SendMediaGroup sendMediaGroup = new SendMediaGroup(who.toString(), media);
         myExecute(sendMediaGroup);
@@ -79,7 +81,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendPhoto.setReplyMarkup(kb);
         myExecute(sendPhoto);
     }
-    
+
     public void sendWithReplyMenu(Long who, String what, InlineKeyboardMarkup kb) {
         SendMessage sm = SendMessage.builder()
                 .chatId(who.toString())
@@ -110,6 +112,14 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     public void myExecute(SendVoice method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendAnimation method) {
         try {
             this.execute(method);
         } catch (TelegramApiException e) {

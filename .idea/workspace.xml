@@ -5,19 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/messages/CommandStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/squareup_gifencoder.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/Protocols.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/Protocols.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/ScreenAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/ScreenAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TFG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/TFG.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/FullScreenWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/FullScreenWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/microphone/Microphone.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/microphone/Microphone.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/messages/Command.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/messages/Command.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Utils.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,6 +147,7 @@
       <workItem from="1681813369532" duration="25865000" />
       <workItem from="1682326527139" duration="14851000" />
       <workItem from="1682593991101" duration="13105000" />
+      <workItem from="1682764346204" duration="1599000" />
     </task>
     <servers />
   </component>

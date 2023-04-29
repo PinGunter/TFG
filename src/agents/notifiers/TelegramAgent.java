@@ -18,8 +18,6 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
-import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -195,18 +193,19 @@ public class TelegramAgent extends NotifierAgent {
                                             }
                                         }
                                         case "burst" -> {
-                                            List<byte[]> burst = (List<byte[]>) c.getResult();
-                                            List<InputMedia> photos = new ArrayList<>();
-                                            for (int i = 0; i < burst.size(); i++) {
-                                                InputStream is = new ByteArrayInputStream(burst.get(i));
-                                                InputMedia inputMedia = new InputMediaPhoto();
-                                                inputMedia.setCaption("Burst captured");
-                                                inputMedia.setMedia(is, "burst" + i);
-                                                photos.add(inputMedia);
-                                            }
+                                            byte[] gif = (byte[]) c.getResult();
+                                            InputFile photo = new InputFile();
+                                            photo.setMedia(new ByteArrayInputStream(gif), "burst.gif");
+//                                            for (int i = 0; i < burst.size(); i++) {
+//                                                InputStream is = new ByteArrayInputStream(burst.get(i));
+//                                                InputMedia inputMedia = new InputMediaPhoto();
+//                                                inputMedia.setCaption("Burst captured");
+//                                                inputMedia.setMedia(is, "burst" + i);
+//                                                photos.add(inputMedia);
+//                                            }
 
                                             for (Long user : userIDs) {
-                                                bot.sendMediaGroup(user, photos);
+                                                bot.sendAnimation(user, photo);
                                             }
 
                                         }
@@ -422,6 +421,7 @@ public class TelegramAgent extends NotifierAgent {
                                 }
                             }
                             kb.keyboardRow(List.of(InlineKeyboardButton.builder().text(isRecordingAudio ? "Stop recording" : "Start recording (3min max)").callbackData(fullInputPath + "/record/startstop").build()));
+                            kb.keyboardRow(List.of(returnMainMenuBtn));
                             newKb.setReplyMarkup(kb.build());
                             newTxt.setText("Select an option");
                         } else {
