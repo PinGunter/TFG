@@ -8,8 +8,9 @@ import messages.Emergency;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -88,6 +89,28 @@ public class Utils {
         gifEncoder.finishEncoding();
 
         return bos.toByteArray();
+    }
+
+    /**
+     * reads the file from the path, decrypts it and returns it
+     */
+    public static Object ReadEncryptedFile(String path, String key) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, ClassNotFoundException {
+        byte[] encrypted = Files.readAllBytes(Path.of(path));
+        byte[] nocrypt = DecryptObj(encrypted, key);
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(nocrypt));
+        return ois.readObject();
+    }
+
+    /**
+     * writes to the path the object encrypted with the key
+     */
+    public static void WriteEncryptedFile(Serializable data, String path, String key) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(bos);
+        objectOutputStream.writeObject(data);
+        objectOutputStream.flush();
+        byte[] encrypted = EncryptObj(bos.toByteArray(), key);
+        Files.write(Path.of(path), encrypted);
     }
 
 }

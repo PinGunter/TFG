@@ -12,19 +12,36 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class TelegramBot extends TelegramLongPollingBot {
     Consumer<Update> onUpdate;
 
+    Set<Long> chatIds;
 
+    private boolean isOpen;
     String name, token;
 
-    public TelegramBot(Consumer<Update> onUpdate) {
+    public TelegramBot(Consumer<Update> onUpdate, Set<Long> chatIds) {
         this.onUpdate = onUpdate;
+        this.chatIds = chatIds;
+        isOpen = false;
         Dotenv dotenv = Dotenv.load();
         name = dotenv.get("TELEGRAM_BOT_NAME");
         token = dotenv.get("TELEGRAM_BOT_TOKEN");
+    }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setChatIds(Set<Long> newChatIds) {
+        chatIds = newChatIds;
     }
 
     @Override

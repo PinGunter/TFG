@@ -10,6 +10,8 @@ import messages.Command;
 import messages.ControllerID;
 import messages.Emergency;
 import notifiers.TelegramBot;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -25,10 +27,16 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import utils.Emoji;
 import utils.Utils;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class TelegramAgent extends NotifierAgent {
@@ -50,7 +58,8 @@ public class TelegramAgent extends NotifierAgent {
 
     private HashMap<String, List<Capabilities>> onlineDevices;
 
-    private Set<Long> userIDs;
+    private HashSet<Pair<Long, String>> users;
+    private HashSet<Long> chatIds;
 
     private List<Emergency> emergencies;
 
@@ -58,18 +67,45 @@ public class TelegramAgent extends NotifierAgent {
 
     private boolean isRecordingAudio;
 
+    final String chatIdsPath = "data/notifiers/chatIds.data";
+
     @Override
     public void setup() {
         // agent setup
         super.setup();
         status = AgentStatus.LOGIN;
 
-        // bot registration
-        bot = new TelegramBot(this::onReceiveTelegramMessage);
+        // we try to read a chatIds.data from the data/ directory
+        // if we fail to open it or cant read its contents (it should be encrypted)
+        // then the bot is not able to communicate to any user without registering it first
+        // TODO once we have the ui we should be able to turn on/off the registering process
+        // right now its gonna be open during the first 30 seconds
+
+        users = new HashSet<>();
+        chatIds = new HashSet<>();
+
+
+        try {
+            users = (HashSet<Pair<Long, String>>) Utils.ReadEncryptedFile(chatIdsPath, cryptKey);
+        } catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException |
+                 BadPaddingException | InvalidKeyException | ClassNotFoundException e) {
+            logger.error("ChatIds file appears to be written with a different cryptkey, overriding...");
+        }
+
+        for (Pair<Long, String> user : users) {
+            chatIds.add(user.getKey());
+        }
+//         bot registration
+        bot = new TelegramBot(this::onReceiveTelegramMessage, chatIds);
+        if (users.size() == 0) {
+            bot.setOpen(true);
+            timer.setTimeout(() -> bot.setOpen(false), 30 * 1000);
+        }
         TelegramBotsApi botsApi;
         try {
             botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(bot);
+            notifyUsers("Domotic System started");
         } catch (TelegramApiException e) {
             logger.error(e.getMessage());
             exit = true;
@@ -93,8 +129,6 @@ public class TelegramAgent extends NotifierAgent {
 
         onlineDevices = new HashMap<>();
         emergencies = new ArrayList<>();
-        // TODO leer/escribir fichero
-        userIDs = new HashSet<>();
     }
 
     @Override
@@ -188,8 +222,8 @@ public class TelegramAgent extends NotifierAgent {
                                             byte[] image = (byte[]) c.getResult();
                                             InputStream is = new ByteArrayInputStream(image);
                                             InputFile inputFile = new InputFile(is, "image");
-                                            for (Long user : userIDs) {
-                                                bot.sendPhoto(user, inputFile);
+                                            for (Pair<Long, String> user : users) {
+                                                bot.sendPhoto(user.getKey(), inputFile);
                                             }
                                         }
                                         case "burst" -> {
@@ -204,8 +238,8 @@ public class TelegramAgent extends NotifierAgent {
 //                                                photos.add(inputMedia);
 //                                            }
 
-                                            for (Long user : userIDs) {
-                                                bot.sendAnimation(user, photo);
+                                            for (Pair<Long, String> user : users) {
+                                                bot.sendAnimation(user.getKey(), photo);
                                             }
 
                                         }
@@ -213,8 +247,8 @@ public class TelegramAgent extends NotifierAgent {
                                             byte[] byteArray = (byte[]) c.getResult();
                                             InputStream is = new ByteArrayInputStream(byteArray);
                                             InputFile inputFile = new InputFile(is, "audio_recording");
-                                            for (Long user : userIDs) {
-                                                bot.sendVoiceMsg(user, inputFile);
+                                            for (Pair<Long, String> user : users) {
+                                                bot.sendVoiceMsg(user.getKey(), inputFile);
                                             }
                                             notifyUsers("Stopped recording");
                                             isRecordingAudio = false;
@@ -226,8 +260,8 @@ public class TelegramAgent extends NotifierAgent {
                                     notifyUsers((String) c.getResult());
                                 }
                                 case FAILURE -> {
-                                    for (Long user : userIDs) {
-                                        bot.sendText(user, Emoji.ERROR.toString() + c.getResult());
+                                    for (Pair<Long, String> user : users) {
+                                        bot.sendText(user.getKey(), Emoji.ERROR.toString() + c.getResult());
                                     }
                                 }
                             }
@@ -247,7 +281,6 @@ public class TelegramAgent extends NotifierAgent {
 
     public void onReceiveTelegramMessage(Update update) {
         if (update.hasCallbackQuery()) {
-            userIDs.add(update.getCallbackQuery().getFrom().getId());
             CallbackQuery callbackQuery = update.getCallbackQuery();
             long chatId = callbackQuery.getMessage().getChatId();
             int msgId = callbackQuery.getMessage().getMessageId();
@@ -260,30 +293,50 @@ public class TelegramAgent extends NotifierAgent {
         String messageText = message.getText();
 
         if (update.hasMessage()) {
-            userIDs.add(update.getMessage().getFrom().getId());
             logger.info("Received Telegram Message: " + messageText);
             if (message.isCommand()) {
 
                 // first Message 
                 if (messageText.equals("/start")) {
-
-                    bot.sendWithReplyMenu(userId, welcomeMessage, mainMenu);
+                    if (isUserRegistered(userId))
+                        bot.sendWithReplyMenu(userId, welcomeMessage, mainMenu);
                 }
-
                 // stop JADE service
-                else if (messageText.equals("/stopjade")) {
-                    goodbye(userId);
+                else if (messageText.equals("/stop")) {
+                    if (isUserRegistered(userId))
+                        goodbye(userId);
                 } else if (messageText.startsWith("/setpagelimit")) {
-                    try {
-                        int newLimit = Integer.parseInt(messageText.split(" ")[1]);
-                        if (newLimit < 4 || newLimit > 12 || newLimit % 2 != 0) {
-                            bot.sendText(userId, Emoji.NERD + " The limit cannot be under 4 or over 12.\n" + Emoji.NERD + " Remember that it has to be even");
-                        } else {
-                            pageLimit = newLimit;
-                            bot.sendWithReplyMenu(userId, "Page limit changed to " + pageLimit, returnMainMenu);
+                    if (isUserRegistered(userId)) {
+                        try {
+                            int newLimit = Integer.parseInt(messageText.split(" ")[1]);
+                            if (newLimit < 4 || newLimit > 12 || newLimit % 2 != 0) {
+                                bot.sendText(userId, Emoji.NERD + " The limit cannot be under 4 or over 12.\n" + Emoji.NERD + " Remember that it has to be even");
+                            } else {
+                                pageLimit = newLimit;
+                                bot.sendWithReplyMenu(userId, "Page limit changed to " + pageLimit, returnMainMenu);
+                            }
+                        } catch (Exception e) {
+                            bot.sendText(userId, "That wasn't a valid number.\n" + Emoji.NERD + " This command is used liked /setpagelimit <newLimit>");
                         }
-                    } catch (Exception e) {
-                        bot.sendText(userId, "That wasn't a valid number.\n" + Emoji.NERD + " This command is used liked /setpagelimit <newLimit>");
+                    }
+
+                } else if (messageText.startsWith("/register")) {
+                    if (bot.isOpen() && !chatIds.contains(userId)) {
+                        if (!messageText.equals("/register")) {
+                            String key = messageText.split(" ")[1];
+                            if (Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8)).equals(cryptKey)) {
+                                addUserId(userId, message.getFrom().getFirstName() + " " + message.getFrom().getLastName());
+                                bot.sendText(userId, Emoji.HELLO.toString() + " Welcome, " + message.getFrom().getFirstName() + "\nYou are now registered!");
+                            } else {
+                                bot.sendText(userId, Emoji.ERROR.toString() + " Sorry, but the key seems to be incorrect.\nRemember that the key is the same one as in the hub");
+                            }
+                        } else {
+                            bot.sendText(userId, Emoji.NERD.toString() + " To use this command correctly add the key at the end.\nLike this: /register key");
+                        }
+                    } else if (chatIds.contains(userId)) {
+                        bot.sendText(userId, Emoji.NERD.toString() + " You are already registered");
+                    } else {
+                        bot.sendText(userId, Emoji.NERD.toString() + " The bot is currently closed for new users. Restart the service or open the bot in the hub screen");
                     }
                 } else {
                     notUnderstood(userId);
@@ -312,18 +365,20 @@ public class TelegramAgent extends NotifierAgent {
 
         fullInputPath = data;
 
-        if (data.startsWith("devices/")) {
-            handleDevices(data);
-        } else if (data.startsWith("settings/")) {
-            handleSettings(data);
-        } else if (data.startsWith("warning/")) {
-            handleWarning(data);
-        } else if (data.equals("return")) {
-            newTxt.setText(welcomeMessage);
-            newKb.setReplyMarkup(mainMenu);
-            currentIndex = 0;
-        } else {
-            logger.error("Unknown callback data: " + data);
+        if (isUserRegistered(chatId)) {
+            if (data.startsWith("devices/")) {
+                handleDevices(data);
+            } else if (data.startsWith("settings/")) {
+                handleSettings(data);
+            } else if (data.startsWith("warning/")) {
+                handleWarning(data);
+            } else if (data.equals("return")) {
+                newTxt.setText(welcomeMessage);
+                newKb.setReplyMarkup(mainMenu);
+                currentIndex = 0;
+            } else {
+                logger.error("Unknown callback data: " + data);
+            }
         }
 
         AnswerCallbackQuery close = AnswerCallbackQuery.builder()
@@ -616,12 +671,12 @@ public class TelegramAgent extends NotifierAgent {
     }
 
     public void notifyUsers(String msg) {
-        userIDs.forEach(user -> bot.sendText(user, Emoji.NOTIFY + " " + msg));
+        users.forEach(user -> bot.sendText(user.getKey(), Emoji.NOTIFY + " " + msg));
     }
 
     public void alertUsers(String msg, String origin) {
         InlineKeyboardButton ack = InlineKeyboardButton.builder().text("Acknowledge emergency").callbackData("warning/" + msg).build();
-        userIDs.forEach(user -> bot.sendWithKeyboard(user,
+        users.forEach(user -> bot.sendWithKeyboard(user.getKey(),
                 Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING + "\n" +
                         msg.toUpperCase() + "\n " + Emoji.LOCATION_PIN + origin + "\n"
                         + Emoji.WARNING + Emoji.WARNING + Emoji.WARNING
@@ -630,15 +685,35 @@ public class TelegramAgent extends NotifierAgent {
 
     public void alertImage(String msg, String origin, InputFile photo) {
         InlineKeyboardButton ack = InlineKeyboardButton.builder().text("Acknowledge emergency").callbackData("warning/" + msg).build();
-        userIDs.forEach(user -> bot.sendText(user,
+        users.forEach(user -> bot.sendText(user.getKey(),
                 Emoji.WARNING.toString() + Emoji.WARNING + Emoji.WARNING + "\n" +
                         msg.toUpperCase() + "\n " + Emoji.LOCATION_PIN + origin + "\n"
                         + Emoji.WARNING + Emoji.WARNING + Emoji.WARNING
         ));
-        userIDs.forEach(user -> bot.sendPhotoKbMarkup(user, photo, InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
+        users.forEach(user -> bot.sendPhotoKbMarkup(user.getKey(), photo, InlineKeyboardMarkup.builder().keyboardRow(List.of(ack)).build()));
     }
 
     public void commandFinished(String msg) {
-        userIDs.forEach(user -> bot.sendText(user, Emoji.CHECK + " " + msg));
+        users.forEach(user -> bot.sendText(user.getKey(), Emoji.CHECK + " " + msg));
+    }
+
+    public void addUserId(long id, String name) {
+        users.add(new MutablePair<>(id, name));
+        chatIds.add(id);
+        logger.info("new user: " + id + " - " + name);
+        bot.setChatIds(chatIds);
+        try {
+            Utils.WriteEncryptedFile(users, chatIdsPath, cryptKey);
+        } catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException |
+                 BadPaddingException | InvalidKeyException e) {
+            logger.error("Error saving chatIds");
+        }
+    }
+
+    public boolean isUserRegistered(Long id) {
+        if (!chatIds.contains(id)) {
+            bot.sendText(id, Emoji.NERD.toString() + " You need to be registered first");
+        }
+        return chatIds.contains(id);
     }
 }
