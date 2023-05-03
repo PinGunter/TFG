@@ -8,11 +8,15 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
 import messages.CommandStatus;
+import utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
 
 public class SpeakerAgent extends ActuatorAgent {
     Speakers speakers;
+
+    final String alarmPath = "data/sounds/alarm.wav";
 
     @Override
     public void setup() {
@@ -44,6 +48,39 @@ public class SpeakerAgent extends ActuatorAgent {
                     res.addReceiver(deviceController);
                     res.setContentObject(c);
                     sendMsg(res);
+                } else if (c.getOrder().startsWith("play")) {
+                    String audioPath = c.getOrder().split(" ")[1];
+                    try {
+                        // notify we are in progress of playing
+                        c.setStatus(CommandStatus.IN_PROGRESS);
+                        c.setResult("Started playing audio", "audio");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+
+                        // play the sound
+                        playSound(audioPath);
+
+                        c.setStatus(CommandStatus.DONE);
+                        c.setResult("Sound played", "msg");
+                    } catch (InterruptedException | IOException e) {
+                        // warn about error
+                        logger.error("Error converting audio to mp3");
+                        c.setStatus(CommandStatus.FAILURE);
+                        c.setResult("Error playing audio", "err");
+
+                    }
+
+                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                    res.setProtocol(Protocols.COMMAND.toString());
+                    res.setSender(getAID());
+                    res.addReceiver(deviceController);
+                    res.setContentObject(c);
+                    sendMsg(res);
+
                 }
             } catch (UnreadableException | IOException e) {
                 logger.error("Error processing command");
@@ -53,7 +90,18 @@ public class SpeakerAgent extends ActuatorAgent {
     }
 
     void playAlarm() {
-        speakers.playSound("./data/sounds/alarm.wav");
+        speakers.playSound(alarmPath);
     }
 
+    void playSound(String path) throws IOException, InterruptedException {
+        // first convert to mp3, then play sound
+        String newPath = Utils.ToMP3(path);
+        speakers.playSound(newPath);
+
+        // we now delete the files
+        File old = new File(path);
+        File mp3 = new File(newPath);
+        old.delete();
+        mp3.delete();
+    }
 }

@@ -5,12 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/data/notifiers/.dummy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/bytedeco_javacv_platform.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/googlecode_soundlibs_mp3spi.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/googlecode_soundlibs_tritonus_share.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/googlecode_soundlibs_vorbisspi.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TFG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/TFG.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/notifiers/TelegramBot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/device/speakers/Speakers.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/speakers/Speakers.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/Emoji.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Emoji.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Utils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/temp/.dummy" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,8 +25,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -74,7 +79,20 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Server">
+  <component name="RunManager" selected="Application.Client">
+    <configuration name="AudioFilePlayer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="test.AudioFilePlayer" />
+      <module name="TFG" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Client" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="test.Client" />
       <module name="TFG" />
@@ -101,6 +119,19 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Speakers" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="device.speakers.Speakers" />
+      <module name="TFG" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="device.speakers.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Utils" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="utils.Utils" />
       <module name="TFG" />
@@ -115,14 +146,18 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.AudioFilePlayer" />
+      <item itemvalue="Application.Speakers" />
       <item itemvalue="Application.Utils" />
       <item itemvalue="Application.Client" />
       <item itemvalue="Application.Server" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Server" />
         <item itemvalue="Application.Client" />
+        <item itemvalue="Application.Server" />
+        <item itemvalue="Application.AudioFilePlayer" />
+        <item itemvalue="Application.Speakers" />
         <item itemvalue="Application.Utils" />
       </list>
     </recent_temporary>
@@ -162,6 +197,8 @@
       <workItem from="1682326527139" duration="14851000" />
       <workItem from="1682593991101" duration="13105000" />
       <workItem from="1682764346204" duration="1599000" />
+      <workItem from="1683049373909" duration="3675000" />
+      <workItem from="1683111007346" duration="7265000" />
     </task>
     <servers />
   </component>

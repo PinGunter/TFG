@@ -4,6 +4,7 @@ import com.squareup.gifencoder.FloydSteinbergDitherer;
 import com.squareup.gifencoder.GifEncoder;
 import com.squareup.gifencoder.ImageOptions;
 import messages.Emergency;
+import org.bytedeco.javacpp.Loader;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
@@ -113,4 +114,10 @@ public class Utils {
         Files.write(Path.of(path), encrypted);
     }
 
+    public static String ToMP3(String path) throws IOException, InterruptedException {
+        String ffmpeg = Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg, "-i", path, path + ".mp3");
+        pb.inheritIO().start().waitFor();
+        return path + ".mp3";
+    }
 }

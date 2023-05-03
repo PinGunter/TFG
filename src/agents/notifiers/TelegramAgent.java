@@ -14,6 +14,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -30,10 +31,7 @@ import utils.Utils;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -68,6 +66,8 @@ public class TelegramAgent extends NotifierAgent {
     private boolean isRecordingAudio;
 
     final String chatIdsPath = "data/notifiers/chatIds.data";
+
+    private String lastAudioPath;
 
     @Override
     public void setup() {
@@ -292,6 +292,7 @@ public class TelegramAgent extends NotifierAgent {
         Message message = update.getMessage();
         String messageText = message.getText();
 
+
         if (update.hasMessage()) {
             logger.info("Received Telegram Message: " + messageText);
             if (message.isCommand()) {
@@ -341,6 +342,31 @@ public class TelegramAgent extends NotifierAgent {
                 } else {
                     notUnderstood(userId);
                 }
+            } else if (message.hasVoice() || message.hasAudio()) {
+                GetFile uploadedFile = new GetFile();
+                String filePath = null;
+                try {
+                    if (message.hasVoice()) {
+                        logger.info("Nota de voz");
+                        uploadedFile.setFileId(message.getVoice().getFileId());
+                        filePath = bot.execute(uploadedFile).getFilePath();
+                    } else {
+                        logger.info("Audio");
+                        uploadedFile.setFileId(message.getAudio().getFileId());
+                        filePath = bot.execute(uploadedFile).getFilePath();
+                    }
+                    lastAudioPath = "temp/" + filePath.split("/")[1];
+                    File output = new File(lastAudioPath);
+                    bot.downloadFile(filePath, output);
+
+                    InlineKeyboardButton singleDevice = InlineKeyboardButton.builder().text(Emoji.SPEAKER + " Single Device").callbackData("audio/singleDevice").build();
+                    InlineKeyboardButton broadcast = InlineKeyboardButton.builder().text(Emoji.BROADCAST + " Broadcast").callbackData("audio/broadcast").build();
+                    InlineKeyboardMarkup audioKb = InlineKeyboardMarkup.builder().keyboardRow(List.of(singleDevice)).keyboardRow(List.of(broadcast)).build();
+                    bot.sendWithKeyboard(userId, "Select an option", audioKb);
+
+                } catch (TelegramApiException e) {
+                    logger.error("Error downloading audio");
+                }
             } else if (!message.hasText()) {
                 notUnderstood(userId);
             } else {
@@ -376,6 +402,8 @@ public class TelegramAgent extends NotifierAgent {
                 newTxt.setText(welcomeMessage);
                 newKb.setReplyMarkup(mainMenu);
                 currentIndex = 0;
+            } else if (data.startsWith("audio/")) {
+                handleAudio(data);
             } else {
                 logger.error("Unknown callback data: " + data);
             }
@@ -391,6 +419,50 @@ public class TelegramAgent extends NotifierAgent {
         bot.myExecute(newKb);
     }
 
+
+    private void handleAudio(String path) {
+        List<String> items = List.of(path.split("/"));
+        if (items.size() > 0) {
+            if (items.get(1).equals("singleDevice")) {
+                if (items.size() > 2) {
+                    // play the sound in the corresponding device
+                    Command c = new Command("play " + lastAudioPath, items.get(2), items.get(3));
+                    sendCommand(c);
+                } else {
+                    // show a list of devices with speakers
+                    List<String> devicesWithSpeakers = onlineDevices.entrySet().stream().filter(entry -> entry.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
+                    List<InlineKeyboardButton> buttons = devicesWithSpeakers.stream().map(d -> InlineKeyboardButton.builder().text(d).callbackData("audio/singleDevice/" + d + "/SPEAKERS").build()).toList();
+
+                    InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardBuilder = InlineKeyboardMarkup.builder();
+                    if (buttons.size() > 0) {
+                        for (int i = 0; i < buttons.size(); i += 2) {
+                            if (i < buttons.size() - 1) {
+                                keyboardBuilder.keyboardRow(List.of(buttons.get(i), buttons.get(i + 1)));
+                            } else {
+                                keyboardBuilder.keyboardRow(List.of(buttons.get(i)));
+                            }
+                        }
+                        newKb.setReplyMarkup(keyboardBuilder.build());
+                    } else {
+                        newTxt.setText(Emoji.COLD_SWEAT + " There are no devices with speakers connected");
+                        newKb.setReplyMarkup(returnMainMenu);
+                    }
+                }
+
+            } else if (items.get(1).equals("broadcast")) {
+                // send command to all speakers
+                List<String> devicesWithSpeakers = onlineDevices.entrySet().stream().filter(entry -> entry.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
+                if (devicesWithSpeakers.size() > 0) {
+                    devicesWithSpeakers.forEach(d -> {
+                        sendCommand(new Command("play " + lastAudioPath, d, "SPEAKERS"));
+                    });
+                } else {
+                    newTxt.setText(Emoji.COLD_SWEAT + " There are no devices with speakers connected");
+                    newKb.setReplyMarkup(returnMainMenu);
+                }
+            }
+        }
+    }
 
     private void handleDevices(String path) {
         List<String> items = List.of(path.split("/"));
