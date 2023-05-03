@@ -9,6 +9,8 @@ import java.io.Serializable;
  */
 public class Command implements Serializable {
     private String order;
+
+    private Serializable obj;
     private String targetDevice;
 
     private String targetChild;
@@ -26,8 +28,24 @@ public class Command implements Serializable {
         this.status = CommandStatus.CREATED;
     }
 
+    public Command(String order, Serializable obj, String targetDevice, String targetChild) {
+        this.order = order;
+        this.targetDevice = targetDevice;
+        this.targetChild = targetChild;
+        this.status = CommandStatus.CREATED;
+        this.obj = obj;
+    }
+
     public String getOrder() {
         return order;
+    }
+
+    public void setObj(Serializable o) {
+        this.obj = o;
+    }
+
+    public Serializable getObj() {
+        return obj;
     }
 
     public String getTargetDevice() {

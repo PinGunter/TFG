@@ -33,6 +33,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -68,6 +70,7 @@ public class TelegramAgent extends NotifierAgent {
     final String chatIdsPath = "data/notifiers/chatIds.data";
 
     private String lastAudioPath;
+    private File lastAudioFile;
 
     @Override
     public void setup() {
@@ -356,8 +359,8 @@ public class TelegramAgent extends NotifierAgent {
                         filePath = bot.execute(uploadedFile).getFilePath();
                     }
                     lastAudioPath = "temp/" + filePath.split("/")[1];
-                    File output = new File(lastAudioPath);
-                    bot.downloadFile(filePath, output);
+                    lastAudioFile = new File(lastAudioPath);
+                    bot.downloadFile(filePath, lastAudioFile);
 
                     InlineKeyboardButton singleDevice = InlineKeyboardButton.builder().text(Emoji.SPEAKER + " Single Device").callbackData("audio/singleDevice").build();
                     InlineKeyboardButton broadcast = InlineKeyboardButton.builder().text(Emoji.BROADCAST + " Broadcast").callbackData("audio/broadcast").build();
@@ -426,8 +429,13 @@ public class TelegramAgent extends NotifierAgent {
             if (items.get(1).equals("singleDevice")) {
                 if (items.size() > 2) {
                     // play the sound in the corresponding device
-                    Command c = new Command("play " + lastAudioPath, items.get(2), items.get(3));
-                    sendCommand(c);
+                    try {
+                        byte[] audio = Files.readAllBytes(Path.of(lastAudioPath));
+                        Command c = new Command("play " + lastAudioPath, audio, items.get(2), items.get(3));
+                        sendCommand(c);
+                    } catch (IOException e) {
+                        logger.error("Error reading bytes from audio file");
+                    }
                 } else {
                     // show a list of devices with speakers
                     List<String> devicesWithSpeakers = onlineDevices.entrySet().stream().filter(entry -> entry.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();

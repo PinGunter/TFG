@@ -12,6 +12,8 @@ import utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class SpeakerAgent extends ActuatorAgent {
     Speakers speakers;
@@ -50,6 +52,9 @@ public class SpeakerAgent extends ActuatorAgent {
                     sendMsg(res);
                 } else if (c.getOrder().startsWith("play")) {
                     String audioPath = c.getOrder().split(" ")[1];
+                    byte[] audioBytes = (byte[]) c.getObj();
+                    Files.write(Path.of(audioPath), audioBytes);
+                    
                     try {
                         // notify we are in progress of playing
                         c.setStatus(CommandStatus.IN_PROGRESS);
