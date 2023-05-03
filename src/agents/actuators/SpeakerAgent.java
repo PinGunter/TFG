@@ -105,10 +105,8 @@ public class SpeakerAgent extends ActuatorAgent {
 
         // we now delete the files
         File old = new File(path);
+        File mp3 = new File(newPath);
         old.delete();
-        if (!newPath.equals(path)) {
-            File mp3 = new File(newPath);
-            mp3.delete();
-        }
+        mp3.delete();
     }
 }
