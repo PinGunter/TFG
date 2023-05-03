@@ -35,7 +35,6 @@ public class CameraAgent extends SensorAgent {
             motionDetectionEnabled = false;
         }
         camera = new Camera(motionDetectionEnabled, this::onMotion, interval);
-        if (motionDetectionEnabled) camera.startDetection();
     }
 
     @Override
@@ -115,6 +114,16 @@ public class CameraAgent extends SensorAgent {
                     sendMsg(response);
 
 
+                } else if (c.getOrder().equals("toggleMotion")) {
+                    camera.setDetectMotion(!camera.getDetectMotion());
+                    c.setStatus(CommandStatus.DONE);
+                    c.setResult("Motion Detection is now: " + (camera.getDetectMotion() ? "on" : "off"), "msg");
+                    ACLMessage response = new ACLMessage(ACLMessage.INFORM);
+                    response.setProtocol(Protocols.COMMAND.toString());
+                    response.setSender(getAID());
+                    response.addReceiver(deviceController);
+                    response.setContentObject(c);
+                    sendMsg(response);
                 }
             } catch (UnreadableException | IOException e) {
                 logger.error("Error processing command");

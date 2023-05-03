@@ -521,15 +521,18 @@ public class TelegramAgent extends NotifierAgent {
                             // root of camera
                             InlineKeyboardButton takePictureBtn = InlineKeyboardButton.builder().text("Take Picture").callbackData(fullInputPath + "/single").build();
                             InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst of 10 photos each second").callbackData(fullInputPath + "/burst").build(); // TODO this is just an example
-                            InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
+                            InlineKeyboardButton motionBtn = InlineKeyboardButton.builder().text("Toggle Motion Detection").callbackData(fullInputPath + "/toggleMotion").build();
+                            InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(motionBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
                             newKb.setReplyMarkup(kb);
                             newTxt.setText("Choose an option");
                         } else {
                             Command command = new Command("ALARM", device, items.get(1));
                             if (items.get(2).equals("single")) {
                                 command.setOrder("photo");
-                            } else {
+                            } else if (items.get(2).startsWith("burst")) {
                                 command.setOrder("burst 10 1");
+                            } else if (items.get(2).equals("toggleMotion")) {
+                                command.setOrder("toggleMotion");
                             }
                             sendCommand(command);
                         }

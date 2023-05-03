@@ -42,7 +42,7 @@ public class ControllerAgent extends ClientAgent {
         Object[] args = new Object[3];
         args[0] = cryptKey;
         args[1] = getAID();
-        args[2] = false; // motion detection
+        args[2] = true; // motion detection
 
 //        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
         launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
