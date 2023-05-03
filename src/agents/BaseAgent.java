@@ -98,7 +98,7 @@ public class BaseAgent extends Agent {
         try {
             runnable.run();
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("Excepcion no capturada " + e.getMessage());
 //            exit = true;
         }
     }
@@ -295,6 +295,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -302,7 +303,6 @@ public class BaseAgent extends Agent {
                     logger.error("Error while decrypting");
                 }
             }
-            logger.message(prettyPrint(msg));
         }
         return msg;
     }
@@ -312,6 +312,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -319,7 +320,6 @@ public class BaseAgent extends Agent {
                     logger.error("Error while decrypting");
                 }
             }
-            logger.message(prettyPrint(msg));
         }
         return msg;
     }
@@ -329,6 +329,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -346,6 +347,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -353,7 +355,6 @@ public class BaseAgent extends Agent {
                     logger.error("Error while decrypting");
                 }
             }
-            logger.message(prettyPrint(msg));
         }
         return msg;
     }
@@ -363,6 +364,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -370,7 +372,6 @@ public class BaseAgent extends Agent {
                     logger.error("Error while decrypting");
                 }
             }
-            logger.message(prettyPrint(msg));
         }
         return msg;
     }
@@ -380,6 +381,7 @@ public class BaseAgent extends Agent {
         if (msg != null) {
             if (msg.getByteSequenceContent() != null) {
                 try {
+                    logger.message(prettyPrint(msg));
                     byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
                     msg.setByteSequenceContent(decrypted);
                 } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
@@ -387,7 +389,6 @@ public class BaseAgent extends Agent {
                     logger.error("Error while decrypting");
                 }
             }
-            logger.message(prettyPrint(msg));
         }
         return msg;
     }

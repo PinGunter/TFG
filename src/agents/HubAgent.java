@@ -136,7 +136,7 @@ public class HubAgent extends BaseAgent {
                                 order.setProtocol(Protocols.COMMAND.toString());
                                 order.setSender(getAID());
                                 order.addReceiver(new AID(command.getTargetDevice(), AID.ISLOCALNAME));
-                                order.setContentObject(new Command(command.getOrder(), command.getTargetChild(), ""));
+                                order.setContentObject(new Command(command.getOrder(), command.getObj(), command.getTargetChild(), ""));
                                 sendMsg(order);
                             }
 
@@ -193,7 +193,7 @@ public class HubAgent extends BaseAgent {
                             }
                         }
                     }
-                    
+
                 }
 
             }
