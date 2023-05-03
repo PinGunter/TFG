@@ -117,6 +117,7 @@ public class Utils {
     public static String ToMP3(String path) throws IOException, InterruptedException {
         String ffmpeg = Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
         ProcessBuilder pb = new ProcessBuilder(ffmpeg, "-i", path, path + ".mp3");
+        System.out.println("CONVIRTIENDO");
         pb.inheritIO().start().waitFor();
         return path + ".mp3";
     }

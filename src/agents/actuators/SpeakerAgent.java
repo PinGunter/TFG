@@ -100,7 +100,9 @@ public class SpeakerAgent extends ActuatorAgent {
 
     void playSound(String path) throws IOException, InterruptedException {
         // first convert to mp3, then play sound
+        logger.info("Antes de convertir a mp3");
         String newPath = Utils.ToMP3(path);
+        logger.info("Convertido a mp3");
         speakers.playSound(newPath);
 
         // we now delete the files

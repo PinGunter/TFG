@@ -29,27 +29,29 @@ public class Camera implements WebcamMotionListener {
         webcam = Webcam.getDefault();
         if (webcam != null) {
             webcam.setViewSize(new Dimension(640, 480));
-            webcam.open(true);
-            if (enable) {
-                detectMotion = true;
-                detector = new WebcamMotionDetector(webcam);
-                onMotion = onMotionEvent;
-                detector.setInterval(interval);
-                detector.setPixelThreshold(100);
-                detector.addMotionListener(this);
-                detector.setPixelThreshold(50);
+            if (webcam.open(true)) {
+                if (enable) {
+                    detectMotion = true;
+                    detector = new WebcamMotionDetector(webcam);
+                    onMotion = onMotionEvent;
+                    detector.setInterval(interval);
+                    detector.setPixelThreshold(100);
+                    detector.addMotionListener(this);
+                    detector.setPixelThreshold(50);
+                }
             }
+
         }
     }
 
     public void stopDetection() {
-        if (detectMotion) {
+        if (detectMotion && webcam.isOpen()) {
             detector.stop();
         }
     }
 
     public void startDetection() {
-        if (detectMotion) {
+        if (detectMotion && webcam.isOpen()) {
             detector.start();
         }
     }
