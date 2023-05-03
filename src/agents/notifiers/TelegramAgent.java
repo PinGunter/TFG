@@ -461,9 +461,12 @@ public class TelegramAgent extends NotifierAgent {
                 // send command to all speakers
                 List<String> devicesWithSpeakers = onlineDevices.entrySet().stream().filter(entry -> entry.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
                 if (devicesWithSpeakers.size() > 0) {
-                    devicesWithSpeakers.forEach(d -> {
-                        sendCommand(new Command("play " + lastAudioPath, d, "SPEAKERS"));
-                    });
+                    try {
+                        byte[] audio = Files.readAllBytes(Path.of(lastAudioPath));
+                        devicesWithSpeakers.forEach(d -> sendCommand(new Command("play " + lastAudioPath, audio, d, "SPEAKERS")));
+                    } catch (IOException e) {
+                        logger.error("Error sending audio");
+                    }
                 } else {
                     newTxt.setText(Emoji.COLD_SWEAT + " There are no devices with speakers connected");
                     newKb.setReplyMarkup(returnMainMenu);

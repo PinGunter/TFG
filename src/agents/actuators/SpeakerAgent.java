@@ -54,11 +54,11 @@ public class SpeakerAgent extends ActuatorAgent {
                     String audioPath = c.getOrder().split(" ")[1];
                     byte[] audioBytes = (byte[]) c.getObj();
                     Files.write(Path.of(audioPath), audioBytes);
-                    
+
                     try {
                         // notify we are in progress of playing
                         c.setStatus(CommandStatus.IN_PROGRESS);
-                        c.setResult("Started playing audio", "audio");
+                        c.setResult(deviceController.getLocalName() + " Started playing audio", "audio");
                         ACLMessage res = new ACLMessage(ACLMessage.INFORM);
                         res.setProtocol(Protocols.COMMAND.toString());
                         res.setSender(getAID());
@@ -70,7 +70,7 @@ public class SpeakerAgent extends ActuatorAgent {
                         playSound(audioPath);
 
                         c.setStatus(CommandStatus.DONE);
-                        c.setResult("Sound played", "msg");
+                        c.setResult(deviceController.getLocalName() + " finished playing sound", "msg");
                     } catch (InterruptedException | IOException e) {
                         // warn about error
                         logger.error("Error converting audio to mp3");
@@ -105,8 +105,10 @@ public class SpeakerAgent extends ActuatorAgent {
 
         // we now delete the files
         File old = new File(path);
-        File mp3 = new File(newPath);
         old.delete();
-        mp3.delete();
+        if (!newPath.equals(path)) {
+            File mp3 = new File(newPath);
+            mp3.delete();
+        }
     }
 }
