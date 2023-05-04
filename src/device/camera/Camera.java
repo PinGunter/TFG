@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -73,18 +72,8 @@ public class Camera implements WebcamMotionListener {
             try {
                 BufferedImage image = webcam.getImage();
                 burst.add(image);
-                ImageIO.write(image, "jpg", new File("temp/" + i + ".jpg"));
                 Thread.sleep((long) frequency);
-
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        for (int i = 0; i < n; i++) {
-            try {
-                ImageIO.write(burst.get(i), "jpg", new File("temp/burst" + i + ".jpg"));
-            } catch (IOException e) {
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }

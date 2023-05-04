@@ -7,10 +7,11 @@
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/device/camera/Camera.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/camera/Camera.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Utils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/Emoji.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Emoji.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,7 +164,7 @@
       <workItem from="1682593991101" duration="13105000" />
       <workItem from="1682764346204" duration="1599000" />
       <workItem from="1683049373909" duration="3675000" />
-      <workItem from="1683111007346" duration="30381000" />
+      <workItem from="1683111007346" duration="36545000" />
     </task>
     <servers />
   </component>

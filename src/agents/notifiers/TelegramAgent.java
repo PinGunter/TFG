@@ -119,9 +119,10 @@ public class TelegramAgent extends NotifierAgent {
 
         InlineKeyboardButton showDevices = InlineKeyboardButton.builder().text(Emoji.LAPTOP + " Show Devices").callbackData("devices/").build();
         InlineKeyboardButton settings = InlineKeyboardButton.builder().text(Emoji.GEAR + " Settings").callbackData("settings/").build();
+        InlineKeyboardButton ackAll = InlineKeyboardButton.builder().text(Emoji.SILENCE + " Acknowledge all warnings").callbackData("ack/").build();
 
         mainMenu = InlineKeyboardMarkup.builder()
-                .keyboardRow(List.of(showDevices)).keyboardRow(List.of(settings)).build();
+                .keyboardRow(List.of(showDevices)).keyboardRow(List.of(settings)).keyboardRow(List.of(ackAll)).build();
         returnMainMenu = InlineKeyboardMarkup.builder().keyboardRow(List.of(returnMainMenuBtn)).build();
 
         // pagination
@@ -174,7 +175,9 @@ public class TelegramAgent extends NotifierAgent {
                             logger.error("Error deserializing");
                         }
                         if (em != null) {
-                            emergencies.add(em);
+                            if (Utils.FindEmergencyByName(emergencies, em.getMessage()) == null) {
+                                emergencies.add(em);
+                            }
                             if (em.getType().equals("Motion")) {
                                 InputStream is = new ByteArrayInputStream((byte[]) em.getObject());
                                 InputFile inputFile = new InputFile(is, "image");
@@ -407,6 +410,19 @@ public class TelegramAgent extends NotifierAgent {
                 currentIndex = 0;
             } else if (data.startsWith("audio/")) {
                 handleAudio(data);
+            } else if (data.equals("ack/")) {
+                sendHub(ACLMessage.INFORM, "ACK-ALL", Protocols.WARNING.toString());
+                if (emergencies.size() > 0) {
+                    bot.sendText(chatId, Emoji.SILENCE + " Warnings acknowledged");
+                    newTxt.setText(welcomeMessage);
+                    newKb.setReplyMarkup(mainMenu);
+                    emergencies.clear();
+                } else {
+                    bot.sendText(chatId, Emoji.COLD_SWEAT + " There are no warnings");
+                    newTxt.setText(welcomeMessage);
+                    newKb.setReplyMarkup(mainMenu);
+                }
+
             } else {
                 logger.error("Unknown callback data: " + data);
             }
@@ -537,7 +553,6 @@ public class TelegramAgent extends NotifierAgent {
                                 System.out.println(items.size());
                                 if (items.size() > 3) { // we have information -> camera/burst/10/1 e.g.
                                     if (items.size() == 4) { // we need to ask for interval information
-                                        logger.info("Estoy aqui");
                                         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder kb = InlineKeyboardMarkup.builder();
                                         String[] s_template = {"0.2", "0.3", "0.5,", "1", "5", "10"};
                                         for (int i = 0; i < s_template.length; i += 2) {
@@ -553,7 +568,6 @@ public class TelegramAgent extends NotifierAgent {
                                         String interval = items.get(4);
 
                                         Command command = new Command(String.join(" ", "burst", n, interval), device, items.get(1));
-//                                        logger.info(command.getOrder());
                                         sendCommand(command);
 
                                         newTxt.setText("Sending command");
@@ -655,19 +669,16 @@ public class TelegramAgent extends NotifierAgent {
 
     private void handleWarning(String path) {
         List<String> items = List.of(path.split("/"));
-        logger.info(items.toString());
         if (items.size() != 2) {
             logger.error("Unknown emergency callback received");
         } else {
             String emergency = items.get(1);
             newTxt.setText("Alert acknowledged");
             newKb.setReplyMarkup(returnMainMenu);
-            Emergency em = Utils.FindEmergencyByName(emergencies, emergency);
-            if (em != null) {
-                sendHub(ACLMessage.INFORM, em, Protocols.WARNING.toString());
-                Utils.RemoveEmergency(emergencies, emergency);
-            }
 
+            // TODO this is terrible but since the hub doesnt check the AID and just checks the string :/
+            sendHub(ACLMessage.INFORM, new Emergency(null, null, emergency), Protocols.WARNING.toString());
+            Utils.RemoveEmergency(emergencies, emergency);
         }
     }
 

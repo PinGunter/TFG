@@ -160,12 +160,6 @@ public class HubAgent extends BaseAgent {
                         notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
                         sendMsg(m);
                     }
-                    // not neccessary now
-                    //case CHECK_CONNECTION -> {
-                    //    if (msg.getPerformative() == ACLMessage.CONFIRM) {
-                    //        devicesConnected.put(sender, true);
-                    //    }
-                    //}
                     case WARNING -> {
                         Emergency em = null;
                         try {
@@ -228,14 +222,24 @@ public class HubAgent extends BaseAgent {
             switch (response.getPerformative()) {
                 case ACLMessage.INFORM -> {
                     try {
-                        Emergency emReceived = (Emergency) response.getContentObject();
-                        ACLMessage endWarning = new ACLMessage(ACLMessage.INFORM);
-                        endWarning.setSender(getAID());
-                        endWarning.addReceiver(emReceived.getOriginDevice());
-                        endWarning.setContentObject(emReceived);
-                        endWarning.setProtocol(Protocols.WARNING.toString());
-                        sendMsg(endWarning);
-                        Utils.RemoveEmergency(emergencies, emReceived.getMessage());
+                        if (response.getContent().equals("ACK-ALL")) {
+                            emergencies.forEach(emergency -> {
+                                try {
+                                    ackEmergency(emergency);
+                                } catch (IOException e) {
+                                    logger.error("Error acknowledging emergency");
+                                }
+                            });
+                            emergencies.clear();
+                        } else {
+                            logger.info("Antes de procesarla");
+                            Emergency emReceived = (Emergency) response.getContentObject();
+                            ackEmergency(Utils.FindEmergencyByName(emergencies, emReceived.getMessage()));
+                            System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
+                            Utils.RemoveEmergency(emergencies, emReceived.getMessage());
+                            logger.info("Despues");
+                            System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
+                        }
                     } catch (IOException e) {
                         logger.error("error serializing");
                     } catch (UnreadableException e) {
@@ -350,5 +354,18 @@ public class HubAgent extends BaseAgent {
             }
         }
         return msg;
+    }
+
+    private void ackEmergency(Emergency em) throws IOException {
+        if (em != null) {
+
+            ACLMessage endWarning = new ACLMessage(ACLMessage.INFORM);
+            endWarning.setSender(getAID());
+            endWarning.addReceiver(em.getOriginDevice());
+            endWarning.setContentObject(em);
+            endWarning.setProtocol(Protocols.WARNING.toString());
+            sendMsg(endWarning);
+        }
+
     }
 }

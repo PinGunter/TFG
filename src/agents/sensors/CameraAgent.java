@@ -35,6 +35,8 @@ public class CameraAgent extends SensorAgent {
             motionDetectionEnabled = false;
         }
         camera = new Camera(motionDetectionEnabled, this::onMotion, interval);
+
+        timer.setTimeout(() -> camera.stopDetection(), 14000);
     }
 
     @Override

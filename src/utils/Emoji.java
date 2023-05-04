@@ -19,6 +19,7 @@ public enum Emoji {
     LOCATION_PIN("\uD83D\uDCCD"),
     BROADCAST("\uD83D\uDCE2"),
     SPEAKER("\uD83D\uDD09"),
+    SILENCE("\uD83D\uDD07"),
     CHECK("✅");
 
 
