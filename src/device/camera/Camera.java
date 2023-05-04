@@ -67,14 +67,14 @@ public class Camera implements WebcamMotionListener {
         return null;
     }
 
-    public ArrayList<BufferedImage> startBurst(int n, int frequency) {
+    public ArrayList<BufferedImage> startBurst(int n, double frequency) {
         ArrayList<BufferedImage> burst = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             try {
                 BufferedImage image = webcam.getImage();
                 burst.add(image);
                 ImageIO.write(image, "jpg", new File("temp/" + i + ".jpg"));
-                Thread.sleep(frequency);
+                Thread.sleep((long) frequency);
 
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);

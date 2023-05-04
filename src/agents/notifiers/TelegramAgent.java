@@ -518,23 +518,60 @@ public class TelegramAgent extends NotifierAgent {
                 switch (items.get(1)) {
                     case "CAMERA" -> {
                         if (items.size() < 3) {
-                            // root of camera
+                            // root /
                             InlineKeyboardButton takePictureBtn = InlineKeyboardButton.builder().text("Take Picture").callbackData(fullInputPath + "/single").build();
-                            InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst of 10 photos each second").callbackData(fullInputPath + "/burst").build(); // TODO this is just an example
+                            InlineKeyboardButton takeBurstBtn = InlineKeyboardButton.builder().text("Take Burst").callbackData(fullInputPath + "/burst").build();
                             InlineKeyboardButton motionBtn = InlineKeyboardButton.builder().text("Toggle Motion Detection").callbackData(fullInputPath + "/toggleMotion").build();
                             InlineKeyboardMarkup kb = InlineKeyboardMarkup.builder().keyboardRow(List.of(takePictureBtn)).keyboardRow(List.of(takeBurstBtn)).keyboardRow(List.of(motionBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
                             newKb.setReplyMarkup(kb);
                             newTxt.setText("Choose an option");
                         } else {
-                            Command command = new Command("ALARM", device, items.get(1));
+                            // first child camera/single || camera/burst || camera/toggleMotion
                             if (items.get(2).equals("single")) {
-                                command.setOrder("photo");
-                            } else if (items.get(2).startsWith("burst")) {
-                                command.setOrder("burst 10 1");
+                                sendCommand(new Command("photo", device, items.get(1)));
                             } else if (items.get(2).equals("toggleMotion")) {
-                                command.setOrder("toggleMotion");
+                                sendCommand(new Command("toggleMotion", device, items.get(1)));
+                            } else if (items.get(2).equals("burst")) {
+                                System.out.println(fullInputPath);
+                                System.out.println(items);
+                                System.out.println(items.size());
+                                if (items.size() > 3) { // we have information -> camera/burst/10/1 e.g.
+                                    if (items.size() == 4) { // we need to ask for interval information
+                                        logger.info("Estoy aqui");
+                                        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder kb = InlineKeyboardMarkup.builder();
+                                        String[] s_template = {"0.2", "0.3", "0.5,", "1", "5", "10"};
+                                        for (int i = 0; i < s_template.length; i += 2) {
+                                            InlineKeyboardButton b1 = InlineKeyboardButton.builder().text(s_template[i] + " s").callbackData(fullInputPath + "/" + s_template[i]).build();
+                                            InlineKeyboardButton b2 = InlineKeyboardButton.builder().text(s_template[i + 1] + " s").callbackData(fullInputPath + "/" + s_template[i + 1]).build();
+                                            kb.keyboardRow(List.of(b1, b2));
+                                        }
+                                        kb.keyboardRow(List.of(returnMainMenuBtn));
+                                        newKb.setReplyMarkup(kb.build());
+                                        newTxt.setText("Select interval");
+                                    } else { // we have all the info we need
+                                        String n = items.get(3);
+                                        String interval = items.get(4);
+
+                                        Command command = new Command(String.join(" ", "burst", n, interval), device, items.get(1));
+//                                        logger.info(command.getOrder());
+                                        sendCommand(command);
+
+                                        newTxt.setText("Sending command");
+                                        newKb.setReplyMarkup(returnMainMenu);
+                                    }
+                                } else { // we are at camera/burst/
+                                    InlineKeyboardMarkup.InlineKeyboardMarkupBuilder kb = InlineKeyboardMarkup.builder();
+                                    int[] n_template = {10, 20, 30, 40, 50, 60};
+                                    for (int i = 0; i < n_template.length; i += 2) {
+                                        InlineKeyboardButton btn = InlineKeyboardButton.builder().text(String.valueOf(n_template[i])).callbackData(fullInputPath + "/" + n_template[i]).build();
+                                        InlineKeyboardButton btn2 = InlineKeyboardButton.builder().text(String.valueOf(n_template[i + 1])).callbackData(fullInputPath + "/" + n_template[i + 1]).build();
+                                        kb.keyboardRow(List.of(btn, btn2));
+                                    }
+                                    kb.keyboardRow(List.of(returnMainMenuBtn));
+                                    newKb.setReplyMarkup(kb.build());
+                                    newTxt.setText("Select number of pictures");
+                                }
                             }
-                            sendCommand(command);
                         }
                     }
                     case "SCREEN" -> {

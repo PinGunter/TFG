@@ -82,7 +82,7 @@ public class CameraAgent extends SensorAgent {
 
             try {
                 Command c = (Command) m.getContentObject();
-                if (c.getOrder().equals("photo") || c.getOrder().equals("ALARM")) { //TODO the ALARM is for easy of use. Will be changed to be better
+                if (c.getOrder().equals("photo")) {
                     byte[] image = camera.getImage();
                     c.setStatus(CommandStatus.DONE);
                     c.setResult(image, "img");
@@ -94,7 +94,7 @@ public class CameraAgent extends SensorAgent {
                     sendMsg(response);
                 } else if (c.getOrder().startsWith("burst")) {
                     int n = Integer.parseInt(c.getOrder().split(" ")[1]);
-                    int interval = Integer.parseInt(c.getOrder().split(" ")[2]) * 1000;
+                    double interval = Double.parseDouble(c.getOrder().split(" ")[2]) * 1000;
                     //TODO in the future send an acknowledged message to show that is running the command
                     ArrayList<BufferedImage> burst = camera.startBurst(n, interval);
 //                    ArrayList<byte[]> photos = new ArrayList<>(burst.size());

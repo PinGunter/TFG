@@ -74,10 +74,10 @@ public class Utils {
         return rgbArray;
     }
 
-    public static byte[] CreateGIF(List<BufferedImage> images, int delay) throws IOException {
+    public static byte[] CreateGIF(List<BufferedImage> images, double delay) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ImageOptions imageOptions = new ImageOptions();
-        imageOptions.setDelay(delay, TimeUnit.MILLISECONDS);
+        imageOptions.setDelay((long) delay, TimeUnit.MILLISECONDS);
         imageOptions.setDitherer(FloydSteinbergDitherer.INSTANCE);
         int width = images.get(0).getWidth();
         int height = images.get(0).getHeight();
