@@ -34,31 +34,54 @@ public class SpeakerAgent extends ActuatorAgent {
     @Override
     protected AgentStatus idle() {
         ACLMessage m = receiveMsg(MessageTemplate.and(
-                MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()),
+                MessageTemplate.or(MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()), MessageTemplate.MatchProtocol(Protocols.LOGOUT.toString())),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
         ));
         if (m != null) {
-            try {
-                Command c = (Command) m.getContentObject();
-                if (c.getOrder().equals("ALARM")) {
-                    playAlarm();
-                    c.setStatus(CommandStatus.DONE);
-                    c.setResult("Alarm played", "msg");
-                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                    res.setProtocol(Protocols.COMMAND.toString());
-                    res.setSender(getAID());
-                    res.addReceiver(deviceController);
-                    res.setContentObject(c);
-                    sendMsg(res);
-                } else if (c.getOrder().startsWith("play")) {
-                    String audioPath = c.getOrder().split(" ")[1];
-                    byte[] audioBytes = (byte[]) c.getObj();
-                    Files.write(Path.of(audioPath), audioBytes);
+            if (m.getProtocol().equals(Protocols.COMMAND.toString())) {
 
-                    try {
-                        // notify we are in progress of playing
-                        c.setStatus(CommandStatus.IN_PROGRESS);
-                        c.setResult(deviceController.getLocalName() + " Started playing audio", "audio");
+
+                try {
+                    Command c = (Command) m.getContentObject();
+                    if (c.getOrder().equals("ALARM")) {
+                        playAlarm();
+                        c.setStatus(CommandStatus.DONE);
+                        c.setResult("Alarm played", "msg");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+                    } else if (c.getOrder().startsWith("play")) {
+                        String audioPath = c.getOrder().split(" ")[1];
+                        byte[] audioBytes = (byte[]) c.getObj();
+                        Files.write(Path.of(audioPath), audioBytes);
+
+                        try {
+                            // notify we are in progress of playing
+                            c.setStatus(CommandStatus.IN_PROGRESS);
+                            c.setResult(deviceController.getLocalName() + " Started playing audio", "audio");
+                            ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                            res.setProtocol(Protocols.COMMAND.toString());
+                            res.setSender(getAID());
+                            res.addReceiver(deviceController);
+                            res.setContentObject(c);
+                            sendMsg(res);
+
+                            // play the sound
+                            playSound(audioPath);
+
+                            c.setStatus(CommandStatus.DONE);
+                            c.setResult(deviceController.getLocalName() + " finished playing sound", "msg");
+                        } catch (InterruptedException | IOException e) {
+                            // warn about error
+                            logger.error("Error converting audio to mp3");
+                            c.setStatus(CommandStatus.FAILURE);
+                            c.setResult("Error playing audio", "err");
+
+                        }
+
                         ACLMessage res = new ACLMessage(ACLMessage.INFORM);
                         res.setProtocol(Protocols.COMMAND.toString());
                         res.setSender(getAID());
@@ -66,29 +89,12 @@ public class SpeakerAgent extends ActuatorAgent {
                         res.setContentObject(c);
                         sendMsg(res);
 
-                        // play the sound
-                        playSound(audioPath);
-
-                        c.setStatus(CommandStatus.DONE);
-                        c.setResult(deviceController.getLocalName() + " finished playing sound", "msg");
-                    } catch (InterruptedException | IOException e) {
-                        // warn about error
-                        logger.error("Error converting audio to mp3");
-                        c.setStatus(CommandStatus.FAILURE);
-                        c.setResult("Error playing audio", "err");
-
                     }
-
-                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                    res.setProtocol(Protocols.COMMAND.toString());
-                    res.setSender(getAID());
-                    res.addReceiver(deviceController);
-                    res.setContentObject(c);
-                    sendMsg(res);
-
+                } catch (UnreadableException | IOException e) {
+                    logger.error("Error processing command");
                 }
-            } catch (UnreadableException | IOException e) {
-                logger.error("Error processing command");
+            } else if (m.getProtocol().equals(Protocols.LOGOUT.toString())) {
+                return AgentStatus.LOGOUT;
             }
         }
         return status;

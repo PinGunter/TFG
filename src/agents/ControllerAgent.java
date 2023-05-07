@@ -3,7 +3,6 @@ package agents;
 import agents.actuators.MicrophoneAgent;
 import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
-import agents.sensors.CameraAgent;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -26,7 +25,7 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = true, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
+    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
 
 
@@ -52,8 +51,8 @@ public class ControllerAgent extends ClientAgent {
         actuators.add("SPEAKERS_" + getLocalName());
         actuators.add("MICROPHONE_" + getLocalName());
         actuators.add("SCREEN_" + getLocalName());
-        launchSubAgent("CAMERA_" + getLocalName(), CameraAgent.class, args);
-        sensors.add("CAMERA_" + getLocalName());
+//        launchSubAgent("CAMERA_" + getLocalName(), CameraAgent.class, args);
+//        sensors.add("CAMERA_" + getLocalName());
 
 
         capabilities = new ArrayList<>();
@@ -142,6 +141,10 @@ public class ControllerAgent extends ClientAgent {
                         if (em != null) emergencies.add(em);
                     }
                 }
+                case LOGOUT -> {
+                    return AgentStatus.LOGOUT;
+                }
+
             }
         }
         if (emergencies.size() > 0) {
@@ -152,7 +155,14 @@ public class ControllerAgent extends ClientAgent {
 
     public AgentStatus logout() {
         // logout process
-        goodBye(Protocols.CONTROLLER_LOGOUT.toString());
+        // first, close the sensors/actuators
+        ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+        m.setProtocol(Protocols.LOGOUT.toString());
+        m.setSender(getAID());
+        sensors.forEach(sensor -> m.addReceiver(new AID(sensor, AID.ISLOCALNAME)));
+        actuators.forEach(actuator -> m.addReceiver(new AID(actuator, AID.ISLOCALNAME)));
+        sendMsg(m);
+        goodBye();
         return AgentStatus.END;
     }
 

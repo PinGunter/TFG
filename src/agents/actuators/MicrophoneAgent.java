@@ -34,53 +34,58 @@ public class MicrophoneAgent extends ActuatorAgent {
     @Override
     protected AgentStatus idle() {
         ACLMessage m = receiveMsg(MessageTemplate.and(
-                MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()),
+                MessageTemplate.or(MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()), MessageTemplate.MatchProtocol(Protocols.LOGOUT.toString())),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
         ));
         if (m != null) {
-            try {
-                Command c = (Command) m.getContentObject();
-                logger.info("COMMAND RECEIVED " + c.getOrder());
-                if (c.getOrder().startsWith("record")) {
-                    int seconds = Integer.parseInt(c.getOrder().split(" ")[1]);
-                    if (start(seconds + 1)) { // +1 because its always a second short
-                        lastCommand = c;
-                        c.setStatus(CommandStatus.IN_PROGRESS);
-                        c.setResult("Started recording", "msg");
-                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                        res.setProtocol(Protocols.COMMAND.toString());
-                        res.setSender(getAID());
-                        res.addReceiver(deviceController);
-                        res.setContentObject(c);
-                        sendMsg(res);
-                    } else { // already recording
-                        c.setStatus(CommandStatus.FAILURE);
-                        c.setResult("A recording was already in progress", "err");
-                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                        res.setProtocol(Protocols.COMMAND.toString());
-                        res.setSender(getAID());
-                        res.addReceiver(deviceController);
-                        res.setContentObject(c);
-                        sendMsg(res);
+            if (m.getProtocol().equals(Protocols.COMMAND.toString())) {
+                try {
+                    Command c = (Command) m.getContentObject();
+                    logger.info("COMMAND RECEIVED " + c.getOrder());
+                    if (c.getOrder().startsWith("record")) {
+                        int seconds = Integer.parseInt(c.getOrder().split(" ")[1]);
+                        if (start(seconds + 1)) { // +1 because its always a second short
+                            lastCommand = c;
+                            c.setStatus(CommandStatus.IN_PROGRESS);
+                            c.setResult("Started recording", "msg");
+                            ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                            res.setProtocol(Protocols.COMMAND.toString());
+                            res.setSender(getAID());
+                            res.addReceiver(deviceController);
+                            res.setContentObject(c);
+                            sendMsg(res);
+                        } else { // already recording
+                            c.setStatus(CommandStatus.FAILURE);
+                            c.setResult("A recording was already in progress", "err");
+                            ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                            res.setProtocol(Protocols.COMMAND.toString());
+                            res.setSender(getAID());
+                            res.addReceiver(deviceController);
+                            res.setContentObject(c);
+                            sendMsg(res);
+                        }
+                    } else if (c.getOrder().equals("startstop")) {
+                        if (start()) {
+                            lastCommand = c;
+                            c.setStatus(CommandStatus.IN_PROGRESS);
+                            c.setResult("Started recording", "audio");
+                            ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                            res.setProtocol(Protocols.COMMAND.toString());
+                            res.setSender(getAID());
+                            res.addReceiver(deviceController);
+                            res.setContentObject(c);
+                            sendMsg(res);
+                        } else { // already recording
+                            stop();
+                        }
                     }
-                } else if (c.getOrder().equals("startstop")) {
-                    if (start()) {
-                        lastCommand = c;
-                        c.setStatus(CommandStatus.IN_PROGRESS);
-                        c.setResult("Started recording", "audio");
-                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                        res.setProtocol(Protocols.COMMAND.toString());
-                        res.setSender(getAID());
-                        res.addReceiver(deviceController);
-                        res.setContentObject(c);
-                        sendMsg(res);
-                    } else { // already recording
-                        stop();
-                    }
+                } catch (UnreadableException | IOException e) {
+                    logger.error("Error processing command");
                 }
-            } catch (UnreadableException | IOException e) {
-                logger.error("Error processing command");
+            } else if (m.getProtocol().equals(Protocols.LOGOUT.toString())) {
+                return AgentStatus.LOGOUT;
             }
+
         }
         return status;
     }

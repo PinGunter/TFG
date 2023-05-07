@@ -42,9 +42,9 @@ public class BatteryAgent extends SensorAgent {
     }
 
     public AgentStatus idle() {
-        super.idle();
+        AgentStatus s = super.idle();
         checkBattery();
-        return AgentStatus.IDLE;
+        return s;
     }
 
     private void checkBattery() {

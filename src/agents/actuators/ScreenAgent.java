@@ -30,26 +30,32 @@ public class ScreenAgent extends ActuatorAgent {
     @Override
     protected AgentStatus idle() {
         ACLMessage m = receiveMsg(MessageTemplate.and(
-                MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()),
+                MessageTemplate.or(MessageTemplate.MatchProtocol(Protocols.COMMAND.toString()), MessageTemplate.MatchProtocol(Protocols.LOGOUT.toString())),
                 MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
         ));
         if (m != null) {
-            try {
-                Command c = (Command) m.getContentObject();
-                if (c.getOrder().equals("toggle")) {
-                    toggleScreen();
-                    c.setStatus(CommandStatus.DONE);
-                    c.setResult("Screen " + (window.isVisible() ? "on" : "off"), "msg");
-                    ACLMessage res = new ACLMessage(ACLMessage.INFORM);
-                    res.setProtocol(Protocols.COMMAND.toString());
-                    res.setSender(getAID());
-                    res.addReceiver(deviceController);
-                    res.setContentObject(c);
-                    sendMsg(res);
+            if (m.getProtocol().equals(Protocols.COMMAND.toString())) {
+
+                try {
+                    Command c = (Command) m.getContentObject();
+                    if (c.getOrder().equals("toggle")) {
+                        toggleScreen();
+                        c.setStatus(CommandStatus.DONE);
+                        c.setResult("Screen " + (window.isVisible() ? "on" : "off"), "msg");
+                        ACLMessage res = new ACLMessage(ACLMessage.INFORM);
+                        res.setProtocol(Protocols.COMMAND.toString());
+                        res.setSender(getAID());
+                        res.addReceiver(deviceController);
+                        res.setContentObject(c);
+                        sendMsg(res);
+                    }
+                } catch (UnreadableException | IOException e) {
+                    logger.error("Error processing command");
                 }
-            } catch (UnreadableException | IOException e) {
-                logger.error("Error processing command");
+            } else if (m.getProtocol().equals(Protocols.LOGOUT.toString())) {
+                return AgentStatus.LOGOUT;
             }
+
         }
         return status;
     }

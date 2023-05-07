@@ -144,17 +144,26 @@ public class HubAgent extends BaseAgent {
                             logger.error("Error while deserializing");
                         }
                     }
+                    case LOGOUT -> {
+                        ACLMessage logoutMsg = new ACLMessage(ACLMessage.REQUEST);
+                        logoutMsg.setSender(getAID());
+                        logoutMsg.setProtocol(Protocols.LOGOUT.toString());
+                        devices.forEach((device, _cap) -> logoutMsg.addReceiver(new AID(device, AID.ISLOCALNAME)));
+                        sendMsg(logoutMsg);
+                        return AgentStatus.LOGOUT;
+
+                    }
                 }
             }
             // from some device
             else if (devices.containsKey(sender)) { // alarm system
                 switch (p) {
-                    case CONTROLLER_LOGOUT -> {
+                    case LOGOUT -> {
                         devices.remove(sender);
                         devicesConnected.remove(sender);
                         ACLMessage m = new ACLMessage();
                         m.setSender(getAID());
-                        m.setProtocol(Protocols.CONTROLLER_LOGOUT.toString());
+                        m.setProtocol(Protocols.LOGOUT.toString());
                         m.setPerformative(ACLMessage.INFORM);
                         m.setContent(sender);
                         notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
@@ -269,6 +278,11 @@ public class HubAgent extends BaseAgent {
     }
 
     public AgentStatus logout() {
+        ACLMessage byeNot = new ACLMessage(ACLMessage.REQUEST);
+        notifiers.forEach(n -> byeNot.addReceiver(new AID(n, AID.ISLOCALNAME)));
+        byeNot.setProtocol(Protocols.LOGOUT.toString());
+        byeNot.setSender(getAID());
+        sendMsg(byeNot);
         return AgentStatus.END;
     }
 

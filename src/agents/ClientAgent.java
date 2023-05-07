@@ -46,12 +46,12 @@ public class ClientAgent extends BaseAgent {
         return AgentStatus.LOGIN;
     }
 
-    public void goodBye(String protocol) {
+    public void goodBye() {
         ACLMessage bye = new ACLMessage();
         bye.setPerformative(ACLMessage.REQUEST);
         bye.setSender(getAID());
         bye.setContent("Bye bye!");
-        bye.setProtocol(protocol);
+        bye.setProtocol(Protocols.LOGOUT.toString());
         bye.addReceiver(new AID(hub, AID.ISLOCALNAME));
         sendMsg(bye);
     }

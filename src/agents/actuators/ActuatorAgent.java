@@ -34,7 +34,7 @@ public abstract class ActuatorAgent extends BaseAgent {
     }
 
     protected AgentStatus logout() {
-        return status;
+        return AgentStatus.END;
     }
 
 }

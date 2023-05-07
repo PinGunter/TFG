@@ -200,10 +200,12 @@ public class TelegramAgent extends NotifierAgent {
                             notifyUsers(cId.getName() + " has connected");
                         }
                     }
-                    case CONTROLLER_LOGOUT -> {
+                    case LOGOUT -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
                             onlineDevices.remove(msg.getContent());
                             notifyUsers(msg.getContent() + " has disconnected");
+                        } else if (msg.getPerformative() == ACLMessage.REQUEST) {
+                            logout = true;
                         }
                     }
                     case CONTROLLER_DISCONNECT -> {
@@ -690,7 +692,7 @@ public class TelegramAgent extends NotifierAgent {
 
     private void goodbye(long userId) {
         bot.sendText(userId, "Good bye, JADE is stopping");
-        logout = true;
+        sendHub(ACLMessage.REQUEST, "", Protocols.LOGOUT.toString());
     }
 
     private void showDevicePages() {

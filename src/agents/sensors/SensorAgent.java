@@ -44,6 +44,8 @@ public abstract class SensorAgent extends BaseAgent {
             if (m != null) {
                 if (m.getSender().equals(deviceController) && m.getPerformative() == ACLMessage.INFORM && m.getProtocol().equals(Protocols.WARNING.toString())) {
                     ack = true;
+                } else if (m.getSender().equals(deviceController) && m.getPerformative() == ACLMessage.REQUEST && m.getProtocol().equals(Protocols.LOGOUT.toString())) {
+                    return AgentStatus.LOGOUT;
                 }
             }
         } catch (InterruptedException e) {
@@ -53,7 +55,7 @@ public abstract class SensorAgent extends BaseAgent {
     }
 
     protected AgentStatus logout() {
-        return status;
+        return AgentStatus.END;
     }
 
     protected void sendAlert(Serializable content) {
