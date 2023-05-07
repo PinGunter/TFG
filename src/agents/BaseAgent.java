@@ -99,7 +99,7 @@ public class BaseAgent extends Agent {
             runnable.run();
         } catch (Exception e) {
             logger.error("Excepcion no capturada " + e.getMessage());
-            exit = true;
+//            exit = true;
         }
     }
 

@@ -4,7 +4,6 @@ import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamMotionDetector;
 import com.github.sarxos.webcam.WebcamMotionEvent;
 import com.github.sarxos.webcam.WebcamMotionListener;
-import utils.Timeout;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -21,11 +20,11 @@ public class Camera implements WebcamMotionListener {
 
     Consumer<WebcamMotionEvent> onMotion;
 
-    Timeout timeout;
+    int interval;
 
     public Camera(boolean enable, Consumer<WebcamMotionEvent> onMotionEvent, int interval) {
-        timeout = new Timeout();
         webcam = Webcam.getDefault();
+        this.interval = interval;
         if (webcam != null) {
             webcam.setViewSize(new Dimension(640, 480));
             if (webcam.open(true)) {
@@ -36,7 +35,7 @@ public class Camera implements WebcamMotionListener {
                 detector.setPixelThreshold(100);
                 detector.addMotionListener(this);
                 detector.setPixelThreshold(50);
-                if (enable) startDetection();
+                detector.start();
             }
 
         }
@@ -44,14 +43,12 @@ public class Camera implements WebcamMotionListener {
 
     public void stopDetection() {
         if (webcam.isOpen()) {
-            detector.stop();
             detectMotion = false;
         }
     }
 
     public void startDetection() {
         if (webcam.isOpen()) {
-            detector.start();
             detectMotion = true;
         }
     }
