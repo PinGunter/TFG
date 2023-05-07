@@ -10,13 +10,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/artifacts/Client.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/artifacts/Server.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/device/camera/Camera.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/camera/Camera.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

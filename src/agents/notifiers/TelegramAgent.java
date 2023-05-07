@@ -554,7 +554,7 @@ public class TelegramAgent extends NotifierAgent {
                                 if (items.size() > 3) { // we have information -> camera/burst/10/1 e.g.
                                     if (items.size() == 4) { // we need to ask for interval information
                                         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder kb = InlineKeyboardMarkup.builder();
-                                        String[] s_template = {"0.2", "0.3", "0.5,", "1", "5", "10"};
+                                        String[] s_template = {"0.2", "0.3", "0.5", "1", "5", "10"};
                                         for (int i = 0; i < s_template.length; i += 2) {
                                             InlineKeyboardButton b1 = InlineKeyboardButton.builder().text(s_template[i] + " s").callbackData(fullInputPath + "/" + s_template[i]).build();
                                             InlineKeyboardButton b2 = InlineKeyboardButton.builder().text(s_template[i + 1] + " s").callbackData(fullInputPath + "/" + s_template[i + 1]).build();
