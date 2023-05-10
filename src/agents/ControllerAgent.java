@@ -3,6 +3,8 @@ package agents;
 import agents.actuators.MicrophoneAgent;
 import agents.actuators.ScreenAgent;
 import agents.actuators.SpeakerAgent;
+import agents.sensors.BatteryAgent;
+import agents.sensors.CameraAgent;
 import device.Capabilities;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -25,10 +27,8 @@ public class ControllerAgent extends ClientAgent {
     private boolean logout = false;
     private List<Emergency> emergencies;
 
-    private boolean hasCamera = false, hasMicrophone = true, hasSpeakers = true, hasBattery = false, hasScreen = true;
     ArrayList<Capabilities> capabilities;
-
-
+    
     @Override
     public void setup() {
         super.setup();
@@ -36,6 +36,7 @@ public class ControllerAgent extends ClientAgent {
         sensors = new ArrayList<>();
         actuators = new ArrayList<>();
         emergencies = new ArrayList<>();
+        capabilities = (ArrayList<Capabilities>) getArguments()[1];
 
         // launching sensors and actuators
         Object[] args = new Object[3];
@@ -43,24 +44,31 @@ public class ControllerAgent extends ClientAgent {
         args[1] = getAID();
         args[2] = false; // motion detection
 
-//        launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
-        launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
-//        sensors.add("BATTERY_" + getLocalName());
-        launchSubAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
-        launchSubAgent("MICROPHONE_" + getLocalName(), MicrophoneAgent.class, args);
-        actuators.add("SPEAKERS_" + getLocalName());
-        actuators.add("MICROPHONE_" + getLocalName());
-        actuators.add("SCREEN_" + getLocalName());
-//        launchSubAgent("CAMERA_" + getLocalName(), CameraAgent.class, args);
-//        sensors.add("CAMERA_" + getLocalName());
+        for (Capabilities c : capabilities) {
+            switch (c) {
+                case BATTERY -> {
+                    launchSubAgent("BATTERY_" + getLocalName(), BatteryAgent.class, args);
+                    sensors.add("BATTERY_" + getLocalName());
+                }
+                case SPEAKERS -> {
+                    launchSubAgent("SPEAKERS_" + getLocalName(), SpeakerAgent.class, args);
+                    actuators.add("SPEAKERS_" + getLocalName());
+                }
+                case SCREEN -> {
+                    launchSubAgent("SCREEN_" + getLocalName(), ScreenAgent.class, args);
+                    actuators.add("SCREEN_" + getLocalName());
+                }
+                case MICROPHONE -> {
+                    launchSubAgent("MICROPHONE_" + getLocalName(), MicrophoneAgent.class, args);
+                    actuators.add("MICROPHONE_" + getLocalName());
+                }
+                case CAMERA -> {
+                    launchSubAgent("CAMERA_" + getLocalName(), CameraAgent.class, args);
+                    sensors.add("CAMERA_" + getLocalName());
+                }
+            }
+        }
 
-
-        capabilities = new ArrayList<>();
-        if (hasCamera) capabilities.add(Capabilities.CAMERA);
-        if (hasMicrophone) capabilities.add(Capabilities.MICROPHONE);
-        if (hasSpeakers) capabilities.add(Capabilities.SPEAKERS);
-        if (hasBattery) capabilities.add(Capabilities.BATTERY);
-        if (hasScreen) capabilities.add(Capabilities.SCREEN);
     }
 
     @Override

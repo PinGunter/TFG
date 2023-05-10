@@ -1,6 +1,7 @@
 package agents;
 
 import device.Capabilities;
+import gui.HubGUI;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
@@ -59,6 +60,7 @@ public class HubAgent extends BaseAgent {
     }
 
     public AgentStatus login() {
+        new Thread(HubGUI::createWindow).start();
         if (!registered) {
             this.DFAddMyServices(List.of("HUB"));
             registered = true;

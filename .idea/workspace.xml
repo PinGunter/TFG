@@ -10,19 +10,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.form" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gui/HubGUI.form" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gui/HubGUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/ClientAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ClientAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/Protocols.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/Protocols.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/ActuatorAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/ActuatorAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/MicrophoneAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/ScreenAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/ScreenAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/actuators/SpeakerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/BatteryAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/SensorAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencies/jade/License" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/jade/License" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencies/jade/README" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/jade/README" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +30,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
+        <option value="JavaFXApplication" />
         <option value="Class" />
       </list>
     </option>
@@ -71,7 +69,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
@@ -86,13 +84,13 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Server">
+  <component name="RunManager" selected="Application.app.Server">
     <configuration name="AudioFilePlayer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="test.AudioFilePlayer" />
+      <option name="MAIN_CLASS_NAME" value="app.AudioFilePlayer" />
       <module name="TFG" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="test.*" />
+          <option name="PATTERN" value="app.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -101,12 +99,38 @@
       </method>
     </configuration>
     <configuration name="Client" type="Application" factoryName="Application" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="test.Client" />
+      <output_file path="$PROJECT_DIR$/temp/client.log" is_save="true" />
+      <option name="MAIN_CLASS_NAME" value="app.Client" />
       <module name="TFG" />
-      <option name="PROGRAM_PARAMETERS" value="localhost fedora" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="test.*" />
+          <option name="PATTERN" value="app.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ControllerGUI" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="gui.ControllerGUI" />
+      <module name="TFG" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="gui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HubGUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="gui.HubGUI" />
+      <module name="TFG" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="gui.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -119,7 +143,20 @@
       <module name="TFG" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="test.*" />
+          <option name="PATTERN" value="app.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="app.Server" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="app.Server" />
+      <module name="TFG" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="app.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -128,12 +165,17 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.ControllerGUI" />
       <item itemvalue="Application.Client" />
+      <item itemvalue="Application.HubGUI" />
+      <item itemvalue="Application.app.Server" />
       <item itemvalue="Application.AudioFilePlayer" />
       <item itemvalue="Application.Server" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.app.Server" />
+        <item itemvalue="Application.HubGUI" />
         <item itemvalue="Application.Server" />
         <item itemvalue="Application.AudioFilePlayer" />
       </list>
@@ -179,6 +221,7 @@
       <workItem from="1683392019207" duration="1144000" />
       <workItem from="1683400438447" duration="376000" />
       <workItem from="1683456462090" duration="5388000" />
+      <workItem from="1683711297781" duration="20886000" />
     </task>
     <servers />
   </component>
@@ -188,5 +231,10 @@
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
     <select />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/TFG$Client.ic" NAME="Client Coverage Results" MODIFIED="1683724410043" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>app.*</FILTER>
+    </SUITE>
   </component>
 </project>

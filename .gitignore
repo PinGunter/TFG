@@ -38,6 +38,6 @@ data/notifiers/chatIds.data
 
 # super secret stuff
 doJade/
-src/test
+src/app
 src/tools
 src/appboot
