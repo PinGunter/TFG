@@ -20,6 +20,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -56,6 +57,8 @@ public class BaseAgent extends Agent {
 
     protected String cryptKey;
 
+    protected boolean isMicroBoot;
+
     @Override
     public void setup() {
         super.setup();
@@ -64,6 +67,19 @@ public class BaseAgent extends Agent {
         logger.setAgentName(getLocalName());
         this.setDefaultBehaviour();
         cryptKey = (String) getArguments()[0];
+        try {
+            File settings = new File("data/settings/micro.txt");
+            Scanner scanner = new Scanner(settings);
+            String isMicroString = "";
+            while (scanner.hasNext()) {
+                isMicroString = scanner.nextLine();
+            }
+            scanner.close();
+            isMicroBoot = isMicroString.equals("true");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -83,6 +99,7 @@ public class BaseAgent extends Agent {
                 });
                 if (exit) {
                     doDelete();
+                    if (isMicroBoot) MicroRuntime.stopJADE();
                 }
             }
 
@@ -408,21 +425,12 @@ public class BaseAgent extends Agent {
 
     public synchronized void launchSubAgent(String name, Class c, Object[] args) {
         try {
-            File settings = new File("data/settings/micro.txt");
-            Scanner scanner = new Scanner(settings);
-            String isMicroString = "";
-            while (scanner.hasNext()) {
-                isMicroString = scanner.nextLine();
-            }
-            scanner.close();
-
-            if (isMicroString.equals("true")) {
+            if (isMicroBoot) {
                 MicroRuntime.startAgent(name, c.getName(), args);
-            } else if (isMicroString.equals("false")) {
+            } else {
                 AgentController ag = getContainerController().createNewAgent(name, c.getName(), args);
                 ag.start();
             }
-
         } catch (Exception e) {
             logger.error(e.getMessage());
         }

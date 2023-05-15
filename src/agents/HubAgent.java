@@ -3,6 +3,7 @@ package agents;
 import device.Capabilities;
 import gui.HubGUI;
 import jade.core.AID;
+import jade.core.MicroRuntime;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
@@ -11,12 +12,12 @@ import messages.Emergency;
 import messages.EmergencyStatus;
 import utils.Utils;
 
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.TimerTask;
+import java.util.*;
 
 public class HubAgent extends BaseAgent {
     private ArrayList<String> notifiers;
@@ -32,9 +33,15 @@ public class HubAgent extends BaseAgent {
     private final int connectionStatusDelay = 10000;
     private final int connectionStatusPeriod = 60000;
 
+    HubGUI gui;
+
     @Override
     public void setup() {
         super.setup();
+        gui = new HubGUI((e0 -> {
+            logoutDevices();
+            logout();
+        }), (e1) -> enableTelegramRegister(), (e2 -> disableTelegramRegister()));
         notifiers = new ArrayList<>();
         devices = new HashMap<>();
         devicesConnected = new HashMap<>();
@@ -55,14 +62,32 @@ public class HubAgent extends BaseAgent {
             case IDLE -> status = idle();
             case WARNING -> status = warning();
             case LOGOUT -> status = logout();
-            case END -> exit = true;
+            case END -> end();
+        }
+
+        gui.setStatus(status.toString(), status == AgentStatus.WARNING ? new Color(255, 0, 0) : new Color(0, 0, 0));
+    }
+
+    private void end() {
+        exit = true;
+        File settings = new File("data/settings/micro.txt");
+        Scanner scanner = null;
+        try {
+            if (isMicroBoot) {
+                MicroRuntime.stopJADE();
+            } else {
+                this.doDelete();
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.exit(1);
         }
     }
 
     public AgentStatus login() {
-        new Thread(HubGUI::createWindow).start();
         if (!registered) {
             this.DFAddMyServices(List.of("HUB"));
+            gui.createWindow();
             registered = true;
         }
 
@@ -111,6 +136,7 @@ public class HubAgent extends BaseAgent {
                     sendMsg(reply);
                     devices.put(controllerID.getName(), controllerID.getCapabilities());
                     devicesConnected.put(controllerID.getName(), true);
+                    gui.setDevices(devicesConnected.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList());
 
                     // -------- Telegram
                     ACLMessage out = new ACLMessage();
@@ -147,11 +173,7 @@ public class HubAgent extends BaseAgent {
                         }
                     }
                     case LOGOUT -> {
-                        ACLMessage logoutMsg = new ACLMessage(ACLMessage.REQUEST);
-                        logoutMsg.setSender(getAID());
-                        logoutMsg.setProtocol(Protocols.LOGOUT.toString());
-                        devices.forEach((device, _cap) -> logoutMsg.addReceiver(new AID(device, AID.ISLOCALNAME)));
-                        sendMsg(logoutMsg);
+                        logoutDevices();
                         return AgentStatus.LOGOUT;
 
                     }
@@ -163,6 +185,7 @@ public class HubAgent extends BaseAgent {
                     case LOGOUT -> {
                         devices.remove(sender);
                         devicesConnected.remove(sender);
+                        gui.setDevices(devicesConnected.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList());
                         ACLMessage m = new ACLMessage();
                         m.setSender(getAID());
                         m.setProtocol(Protocols.LOGOUT.toString());
@@ -280,11 +303,13 @@ public class HubAgent extends BaseAgent {
     }
 
     public AgentStatus logout() {
+        logger.info("LOGGING OUT");
         ACLMessage byeNot = new ACLMessage(ACLMessage.REQUEST);
         notifiers.forEach(n -> byeNot.addReceiver(new AID(n, AID.ISLOCALNAME)));
         byeNot.setProtocol(Protocols.LOGOUT.toString());
         byeNot.setSender(getAID());
         sendMsg(byeNot);
+        status = AgentStatus.END;
         return AgentStatus.END;
     }
 
@@ -320,6 +345,7 @@ public class HubAgent extends BaseAgent {
                 }
             });
         });
+        gui.setDevices(devicesConnected.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList());
 
         if (oldEmergencies.size() > 0) {
             emergencies.removeAll(oldEmergencies);
@@ -383,5 +409,31 @@ public class HubAgent extends BaseAgent {
             sendMsg(endWarning);
         }
 
+    }
+
+    private void enableTelegramRegister() {
+        ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+        m.setSender(getAID());
+        notifiers.forEach(n -> m.addReceiver(new AID(n, AID.ISLOCALNAME)));
+        m.setProtocol(Protocols.REGISTER.toString());
+        m.setContent("enable");
+        sendMsg(m);
+    }
+
+    private void disableTelegramRegister() {
+        ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+        m.setSender(getAID());
+        notifiers.forEach(n -> m.addReceiver(new AID(n, AID.ISLOCALNAME)));
+        m.setProtocol(Protocols.REGISTER.toString());
+        m.setContent("disable");
+        sendMsg(m);
+    }
+
+    private void logoutDevices() {
+        ACLMessage logoutMsg = new ACLMessage(ACLMessage.REQUEST);
+        logoutMsg.setSender(getAID());
+        logoutMsg.setProtocol(Protocols.LOGOUT.toString());
+        devices.forEach((device, _cap) -> logoutMsg.addReceiver(new AID(device, AID.ISLOCALNAME)));
+        sendMsg(logoutMsg);
     }
 }

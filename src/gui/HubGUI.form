@@ -42,7 +42,7 @@
               <text value="Status"/>
             </properties>
           </component>
-          <component id="eb9f5" class="javax.swing.JLabel" binding="sattusLabel">
+          <component id="eb9f5" class="javax.swing.JLabel" binding="statusLabel">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -82,7 +82,14 @@
             </constraints>
             <properties/>
             <border type="none"/>
-            <children/>
+            <children>
+              <component id="d194" class="javax.swing.JList" binding="deviceList">
+                <constraints/>
+                <properties>
+                  <enabled value="false"/>
+                </properties>
+              </component>
+            </children>
           </scrollpane>
           <component id="f618d" class="javax.swing.JLabel">
             <constraints>

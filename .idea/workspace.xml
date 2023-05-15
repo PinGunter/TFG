@@ -10,16 +10,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.form" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/HubGUI.form" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/HubGUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/BaseAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/BaseAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencies/jade/License" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/jade/License" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencies/jade/README" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/jade/README" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/Protocols.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/Protocols.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/ControllerGUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.form" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/ControllerGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/ControllerGUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/HubGUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/HubGUI.form" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/HubGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/HubGUI.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,20 +84,7 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.app.Server">
-    <configuration name="AudioFilePlayer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="app.AudioFilePlayer" />
-      <module name="TFG" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="app.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="Application.Client">
     <configuration name="Client" type="Application" factoryName="Application" nameIsGenerated="true">
       <output_file path="$PROJECT_DIR$/temp/client.log" is_save="true" />
       <option name="MAIN_CLASS_NAME" value="app.Client" />
@@ -112,46 +99,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ControllerGUI" type="Application" factoryName="Application" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="gui.ControllerGUI" />
-      <module name="TFG" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="gui.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="HubGUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="gui.HubGUI" />
-      <module name="TFG" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="gui.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Server" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="test.Server" />
-      <module name="TFG" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="app.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="app.Server" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+    <configuration name="Server" type="Application" factoryName="Application" temporary="true">
       <option name="MAIN_CLASS_NAME" value="app.Server" />
       <module name="TFG" />
       <extension name="coverage">
@@ -165,19 +113,12 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Application.ControllerGUI" />
       <item itemvalue="Application.Client" />
-      <item itemvalue="Application.HubGUI" />
-      <item itemvalue="Application.app.Server" />
-      <item itemvalue="Application.AudioFilePlayer" />
       <item itemvalue="Application.Server" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.app.Server" />
-        <item itemvalue="Application.HubGUI" />
         <item itemvalue="Application.Server" />
-        <item itemvalue="Application.AudioFilePlayer" />
       </list>
     </recent_temporary>
   </component>
@@ -221,7 +162,10 @@
       <workItem from="1683392019207" duration="1144000" />
       <workItem from="1683400438447" duration="376000" />
       <workItem from="1683456462090" duration="5388000" />
-      <workItem from="1683711297781" duration="20886000" />
+      <workItem from="1683711297781" duration="21213000" />
+      <workItem from="1683924534794" duration="282000" />
+      <workItem from="1683924963014" duration="540000" />
+      <workItem from="1684057311248" duration="19669000" />
     </task>
     <servers />
   </component>

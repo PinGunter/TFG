@@ -6,7 +6,9 @@ import agents.actuators.SpeakerAgent;
 import agents.sensors.BatteryAgent;
 import agents.sensors.CameraAgent;
 import device.Capabilities;
+import gui.ControllerGUI;
 import jade.core.AID;
+import jade.core.MicroRuntime;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
@@ -15,6 +17,7 @@ import messages.Emergency;
 import messages.EmergencyStatus;
 import utils.Utils;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +31,13 @@ public class ControllerAgent extends ClientAgent {
     private List<Emergency> emergencies;
 
     ArrayList<Capabilities> capabilities;
-    
+
+    ControllerGUI gui;
+
     @Override
     public void setup() {
         super.setup();
+        gui = new ControllerGUI(getLocalName(), (e) -> logout());
         status = AgentStatus.LOGIN;
         sensors = new ArrayList<>();
         actuators = new ArrayList<>();
@@ -80,10 +86,30 @@ public class ControllerAgent extends ClientAgent {
             case LOGOUT -> status = logout();
             case END -> exit = true;
         }
+        gui.setStatus(status.toString(), status == AgentStatus.WARNING ? new Color(255, 0, 0) : new Color(0, 0, 0));
     }
 
     public AgentStatus login() {
         if (isFirstTime) {
+            gui.show();
+            timer.setTimeout(() -> {
+                if (status == AgentStatus.LOGIN) {
+                    gui.setStatus("LOGIN ERROR", new Color(255, 0, 0));
+                    gui.setTextArea("Couldn't connect to the HUB. Is the password correct?", new Color(255, 0, 0));
+
+                    ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                    m.setProtocol(Protocols.LOGOUT.toString());
+                    m.setSender(getAID());
+                    sensors.forEach(sensor -> m.addReceiver(new AID(sensor, AID.ISLOCALNAME)));
+                    actuators.forEach(actuator -> m.addReceiver(new AID(actuator, AID.ISLOCALNAME)));
+                    sendMsg(m);
+                    status = AgentStatus.END;
+                    doDelete();
+                    if (isMicroBoot) MicroRuntime.stopJADE();
+                    timer.setTimeout(() -> System.exit(0), 30000);
+
+                }
+            }, 60000);
             this.DFAddMyServices(List.of("DEVICE-CONTROLLER"));
             this.DFAddMyServices(capabilities.stream().map(Enum::toString).toList());
             isFirstTime = false;
@@ -171,6 +197,12 @@ public class ControllerAgent extends ClientAgent {
         actuators.forEach(actuator -> m.addReceiver(new AID(actuator, AID.ISLOCALNAME)));
         sendMsg(m);
         goodBye();
+
+        status = AgentStatus.END;
+        doDelete();
+        if (isMicroBoot) MicroRuntime.stopJADE();
+        timer.setTimeout(() -> System.exit(0), 30000);
+
         return AgentStatus.END;
     }
 

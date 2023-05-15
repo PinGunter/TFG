@@ -77,13 +77,7 @@ public class TelegramAgent extends NotifierAgent {
         // agent setup
         super.setup();
         status = AgentStatus.LOGIN;
-
-        // we try to read a chatIds.data from the data/ directory
-        // if we fail to open it or cant read its contents (it should be encrypted)
-        // then the bot is not able to communicate to any user without registering it first
-        // TODO once we have the ui we should be able to turn on/off the registering process
-        // right now its gonna be open during the first 30 seconds
-
+        
         users = new HashSet<>();
         chatIds = new HashSet<>();
 
@@ -167,6 +161,7 @@ public class TelegramAgent extends NotifierAgent {
                 }
 
                 switch (p) {
+                    case REGISTER -> bot.setOpen(msg.getContent().equals("enable"));
                     case WARNING -> {
                         Emergency em = null;
                         try {
