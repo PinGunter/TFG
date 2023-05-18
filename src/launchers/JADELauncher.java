@@ -8,6 +8,7 @@ import jade.core.MicroRuntime;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
+import jade.util.leap.Properties;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import utils.Logger;
@@ -22,6 +23,7 @@ public class JADELauncher {
     private boolean isMicroboot;
 
     private AgentContainer container;
+    private String containerName;
 
     public JADELauncher() {
         logger = new Logger();
@@ -84,7 +86,16 @@ public class JADELauncher {
     }
 
     private JADELauncher setupMicroJadeConnection(String host, int port) {
-        logger.error("Not implemented");
+        logger.info("Connecting to JADE (Micro)");
+        Properties properties = new Properties();
+        if (!host.equals("")) {
+            properties.setProperty(Profile.MAIN_HOST, host);
+        }
+        if (port != -1) {
+            properties.setProperty(Profile.MAIN_PORT, "" + port);
+        }
+        MicroRuntime.startJADE(properties, null);
+        containerName = MicroRuntime.getContainerName();
         return this;
     }
 
