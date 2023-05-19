@@ -3,7 +3,6 @@ package agents;
 import device.Capabilities;
 import gui.HubGUI;
 import jade.core.AID;
-import jade.core.MicroRuntime;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import messages.Command;
@@ -69,17 +68,6 @@ public class HubAgent extends BaseAgent {
 
     private void end() {
         exit = true;
-        try {
-            if (isMicroBoot) {
-                MicroRuntime.stopJADE();
-                timer.setTimeout(() -> System.exit(0), 20000);
-            } else {
-                this.doDelete();
-                System.exit(0);
-            }
-        } catch (Exception e) {
-            System.exit(1);
-        }
     }
 
     public AgentStatus login() {

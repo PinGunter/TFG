@@ -99,7 +99,6 @@ public class BaseAgent extends Agent {
                 });
                 if (exit) {
                     doDelete();
-                    if (isMicroBoot) MicroRuntime.stopJADE();
                 }
             }
 

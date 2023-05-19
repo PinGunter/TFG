@@ -11,13 +11,18 @@ import jade.core.Runtime;
 import jade.util.leap.Properties;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
 import utils.Logger;
+import utils.Timeout;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TimerTask;
 
 public class JADELauncher {
 
@@ -28,9 +33,15 @@ public class JADELauncher {
     private AgentContainer container;
     private String containerName;
 
+    private List<String> agentNames;
+
+    private Timeout timer;
+
     public JADELauncher() {
         logger = new Logger();
         logger.setAgentName("JADELauncher");
+        agentNames = new ArrayList<>();
+        timer = new Timeout();
     }
 
     public JADELauncher boot(String host, int port) {
@@ -79,6 +90,7 @@ public class JADELauncher {
 
     public void launchAgent(String name, Class c, Object[] args) throws Exception {
         logger.info("Launching agent: " + name);
+        agentNames.add(name);
         AgentController ag;
         if (isMicroboot) {
             MicroRuntime.startAgent(name, c.getName(), args);
@@ -118,5 +130,68 @@ public class JADELauncher {
                 System.err.println(e.getMessage());
             }
         }
+    }
+
+
+    private void purge() {
+        logger.info("Purging agents");
+        AgentController agentController;
+        for (String name : agentNames) {
+            try {
+                if (isMicroboot) {
+                    agentController = MicroRuntime.getAgent(name);
+                } else {
+                    agentController = container.getAgent(name);
+                }
+                agentController.kill();
+            } catch (Exception e) {
+                logger.error("Error purging remaining agents");
+            }
+        }
+    }
+
+    private void stopService() {
+        logger.info("Stopping service");
+        try {
+            if (isMicroboot) {
+                MicroRuntime.stopJADE();
+            } else {
+                container.kill();
+            }
+        } catch (StaleProxyException e) {
+            logger.error("Error killing container");
+            System.exit(1);
+        }
+        System.exit(0);
+    }
+
+    private void lifePoll() {
+        timer.setInterval(new TimerTask() {
+            @Override
+            public void run() {
+                logger.info("Polling agents");
+                boolean isAlive = false;
+                for (String name : agentNames) {
+                    try {
+                        if (isMicroboot) {
+                            isAlive = MicroRuntime.size() > 0;
+                        } else {
+                            container.getAgent(name);
+                            isAlive = true;
+                        }
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
+                    }
+                }
+                if (!isAlive) {
+                    purge();
+                    stopService();
+                }
+            }
+        }, 2500);
+    }
+
+    public void waitAndShutdown() {
+        lifePoll();
     }
 }

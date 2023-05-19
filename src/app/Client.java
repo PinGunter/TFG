@@ -63,6 +63,7 @@ public class Client extends JFrame {
                 boot.boot(ip, 1099);
                 boot.launchAgent(name, ControllerAgent.class, arguments);
                 setVisible(false);
+                boot.waitAndShutdown();
             } else {
                 errorArea.setText("No field can be left blank");
             }

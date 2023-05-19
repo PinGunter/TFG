@@ -48,7 +48,7 @@ public class Server extends JFrame {
                 boot.launchAgent("HUB", HubAgent.class, arguments);
                 boot.launchAgent("telegramAgent", TelegramAgent.class, arguments);
                 setVisible(false);
-//                boot.WaitToShutDown();
+                boot.waitAndShutdown();
             } else {
                 errorArea.setText("No field can be left blank");
             }

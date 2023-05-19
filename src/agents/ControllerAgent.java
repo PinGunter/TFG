@@ -199,10 +199,6 @@ public class ControllerAgent extends ClientAgent {
         goodBye();
 
         status = AgentStatus.END;
-        doDelete();
-        if (isMicroBoot) MicroRuntime.stopJADE();
-        timer.setTimeout(() -> System.exit(0), 20000);
-
         return AgentStatus.END;
     }
 
