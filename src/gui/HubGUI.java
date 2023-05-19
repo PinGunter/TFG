@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 
 public class HubGUI {
@@ -22,6 +23,7 @@ public class HubGUI {
     Consumer<ActionEvent> startTelegram;
     Consumer<ActionEvent> stopTelegram;
 
+    private String telegramCode;
 
     public HubGUI(Consumer<ComponentEvent> exit, Consumer<ActionEvent> startTelegram, Consumer<ActionEvent> stopTelegram) {
         this.onExit = exit;
@@ -46,6 +48,45 @@ public class HubGUI {
         enableTelegramRegistrationButton.addActionListener((t) -> {
             enableTelegramRegistrationButton.setEnabled(false);
             disableTelegramRegistrationButton.setEnabled(true);
+            Random random = new Random();
+            telegramCode = "";
+            for (int i = 0; i < 6; i++) {
+                telegramCode += random.nextInt(0, 10);
+            }
+            JDialog dialog = new JDialog(mainframe, false);
+            dialog.setLayout(new BoxLayout(dialog.getContentPane(), BoxLayout.Y_AXIS));
+            dialog.setBounds(440, 10, 410, 310);
+            dialog.add(Box.createRigidArea(new Dimension(5, 20)));
+
+            JLabel title = new JLabel("Telegram Verification Code");
+            title.setAlignmentX(Component.CENTER_ALIGNMENT);
+            title.setFont(new Font(title.getFont().getName(), Font.BOLD, 20));
+            dialog.add(title);
+
+
+            dialog.add(Box.createRigidArea(new Dimension(5, 40)));
+
+            JLabel code = new JLabel(telegramCode);
+            code.setFont(new Font(Font.MONOSPACED, Font.BOLD, 35));
+            code.setAlignmentX(Component.CENTER_ALIGNMENT);
+            dialog.add(code);
+
+            dialog.add(Box.createRigidArea(new Dimension(5, 40)));
+
+
+            JLabel label = new JLabel("use /register " + telegramCode + " to register your account");
+            label.setForeground(new Color(100, 100, 100));
+            label.setAlignmentX(Component.CENTER_ALIGNMENT);
+            dialog.add(label);
+
+            dialog.add(Box.createRigidArea(new Dimension(5, 40)));
+
+
+            JButton closebtn = new JButton("Close");
+            closebtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            closebtn.addActionListener((e) -> dialog.dispose());
+            dialog.add(closebtn);
+            dialog.setVisible(true);
             startTelegram.accept(t);
         });
         disableTelegramRegistrationButton.addActionListener((t) -> {
@@ -70,5 +111,7 @@ public class HubGUI {
         this.deviceList.setListData(devices.toArray());
     }
 
-
+    public String getTelegramCode() {
+        return telegramCode;
+    }
 }
