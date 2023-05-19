@@ -13,7 +13,6 @@ import messages.EmergencyStatus;
 import utils.Utils;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
@@ -70,11 +69,10 @@ public class HubAgent extends BaseAgent {
 
     private void end() {
         exit = true;
-        File settings = new File("data/settings/micro.txt");
-        Scanner scanner = null;
         try {
             if (isMicroBoot) {
                 MicroRuntime.stopJADE();
+                timer.setTimeout(() -> System.exit(0), 20000);
             } else {
                 this.doDelete();
                 System.exit(0);

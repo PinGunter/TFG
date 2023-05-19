@@ -13,6 +13,9 @@ import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import utils.Logger;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -32,6 +35,7 @@ public class JADELauncher {
 
     public JADELauncher boot(String host, int port) {
         isMicroboot = !isLocalIP(host);
+        writeToFile("data/settings/micro.txt", String.valueOf(isMicroboot));
         return selectConnection(host, port);
     }
 
@@ -99,4 +103,20 @@ public class JADELauncher {
         return this;
     }
 
+    public void writeToFile(String path, String output) {
+        File file = new File(path);
+        FileWriter fr = null;
+        try {
+            fr = new FileWriter(file);
+            fr.write(output);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        } finally {
+            try {
+                fr.close();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        }
+    }
 }
