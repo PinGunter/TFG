@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ArtifactsWorkspaceSettings">
     <artifacts-to-build>
-      <artifact name="Client" />
+      <artifact name="TFG" />
     </artifacts-to-build>
   </component>
   <component name="AutoImportSettings">
@@ -10,8 +10,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/Client.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/client.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/Server.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/HubGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/HubGUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/Client.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +63,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
@@ -161,6 +163,8 @@
       <workItem from="1684260870575" duration="2411000" />
       <workItem from="1684310835760" duration="3413000" />
       <workItem from="1684432791923" duration="10978000" />
+      <workItem from="1684603413828" duration="1398000" />
+      <workItem from="1684610047290" duration="518000" />
     </task>
     <servers />
   </component>

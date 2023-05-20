@@ -74,6 +74,7 @@ public class Client extends JFrame {
     }
 
     public static void main(String[] args) {
+        System.out.println("Welcome to the domotic alerts");
         Client c = new Client();
     }
 
