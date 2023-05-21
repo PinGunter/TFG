@@ -32,7 +32,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -72,12 +71,14 @@ public class TelegramAgent extends NotifierAgent {
     private String lastAudioPath;
     private File lastAudioFile;
 
+    private String verificationCode;
+
     @Override
     public void setup() {
         // agent setup
         super.setup();
         status = AgentStatus.LOGIN;
-        
+
         users = new HashSet<>();
         chatIds = new HashSet<>();
 
@@ -161,7 +162,16 @@ public class TelegramAgent extends NotifierAgent {
                 }
 
                 switch (p) {
-                    case REGISTER -> bot.setOpen(msg.getContent().equals("enable"));
+                    case REGISTER -> {
+                        logger.info(msg.getContent());
+                        if (msg.getContent().startsWith("enable")) {
+                            verificationCode = msg.getContent().split(" ")[1];
+                            bot.setOpen(true);
+                        } else {
+                            bot.setOpen(false);
+                        }
+
+                    }
                     case WARNING -> {
                         Emergency em = null;
                         try {
@@ -328,11 +338,11 @@ public class TelegramAgent extends NotifierAgent {
                     if (bot.isOpen() && !chatIds.contains(userId)) {
                         if (!messageText.equals("/register")) {
                             String key = messageText.split(" ")[1];
-                            if (Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8)).equals(cryptKey)) {
+                            if (key.equals(verificationCode)) {
                                 addUserId(userId, message.getFrom().getFirstName() + " " + message.getFrom().getLastName());
                                 bot.sendText(userId, Emoji.HELLO.toString() + " Welcome, " + message.getFrom().getFirstName() + "\nYou are now registered!");
                             } else {
-                                bot.sendText(userId, Emoji.ERROR.toString() + " Sorry, but the key seems to be incorrect.\nRemember that the key is the same one as in the hub");
+                                bot.sendText(userId, Emoji.ERROR.toString() + " Sorry, but the verification code seems to be incorrect.");
                             }
                         } else {
                             bot.sendText(userId, Emoji.NERD.toString() + " To use this command correctly add the key at the end.\nLike this: /register key");

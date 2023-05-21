@@ -402,7 +402,7 @@ public class HubAgent extends BaseAgent {
         m.setSender(getAID());
         notifiers.forEach(n -> m.addReceiver(new AID(n, AID.ISLOCALNAME)));
         m.setProtocol(Protocols.REGISTER.toString());
-        m.setContent("enable");
+        m.setContent("enable " + gui.getTelegramCode());
         sendMsg(m);
     }
 

@@ -10,10 +10,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/Client.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/client.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/Server.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/ClientAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ClientAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/HubGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/HubGUI.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +80,7 @@
       <recent name="tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Server">
+  <component name="RunManager" selected="Application.Client">
     <configuration name="Client" type="Application" factoryName="Application" nameIsGenerated="true">
       <output_file path="$PROJECT_DIR$/temp/client.log" is_save="true" />
       <option name="MAIN_CLASS_NAME" value="app.Client" />
@@ -164,7 +166,8 @@
       <workItem from="1684310835760" duration="3413000" />
       <workItem from="1684432791923" duration="10978000" />
       <workItem from="1684603413828" duration="1398000" />
-      <workItem from="1684610047290" duration="518000" />
+      <workItem from="1684610047290" duration="617000" />
+      <workItem from="1684665695793" duration="4348000" />
     </task>
     <servers />
   </component>

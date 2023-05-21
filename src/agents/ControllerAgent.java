@@ -95,8 +95,7 @@ public class ControllerAgent extends ClientAgent {
             timer.setTimeout(() -> {
                 if (status == AgentStatus.LOGIN) {
                     gui.setStatus("LOGIN ERROR", new Color(255, 0, 0));
-                    gui.setTextArea("Couldn't connect to the HUB. Is the password correct?", new Color(255, 0, 0));
-
+                    gui.setTextArea("Couldn't connect to the HUB. Is the password correct?\nShutting down in 60 seconds", new Color(255, 0, 0));
                     ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
                     m.setProtocol(Protocols.LOGOUT.toString());
                     m.setSender(getAID());
@@ -114,7 +113,9 @@ public class ControllerAgent extends ClientAgent {
             this.DFAddMyServices(capabilities.stream().map(Enum::toString).toList());
             isFirstTime = false;
         }
-        return this.lookForHub(Protocols.CONTROLLER_LOGIN.toString(), null, new ControllerID(getLocalName(), capabilities));
+        if (status != AgentStatus.END)
+            return this.lookForHub(Protocols.CONTROLLER_LOGIN.toString(), null, new ControllerID(getLocalName(), capabilities));
+        else return status;
     }
 
 
@@ -196,7 +197,7 @@ public class ControllerAgent extends ClientAgent {
         sensors.forEach(sensor -> m.addReceiver(new AID(sensor, AID.ISLOCALNAME)));
         actuators.forEach(actuator -> m.addReceiver(new AID(actuator, AID.ISLOCALNAME)));
         sendMsg(m);
-        goodBye();
+        if (hub != null) goodBye();
 
         status = AgentStatus.END;
         return AgentStatus.END;
