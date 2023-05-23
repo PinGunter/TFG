@@ -56,14 +56,16 @@ public class CameraAgent extends SensorAgent {
                 if (p.y > maxY) maxY = p.y;
             }
             // top and bottom lines
-            for (int i = minX; i <= maxX; i++) {
-                img.setRGB(i, minY, c.getRGB());
-                img.setRGB(i, maxY, c.getRGB());
-            }
-            // left and right ones
-            for (int i = minY; i <= maxY; i++) {
-                img.setRGB(minX, i, c.getRGB());
-                img.setRGB(maxX, i, c.getRGB());
+            for (int k = -1; k <= 1; k++) {
+                for (int i = minX; i <= maxX; i++) {
+                    img.setRGB(i, Utils.clamp(minY + k, 0, img.getHeight() - 1), c.getRGB());
+                    img.setRGB(i, Utils.clamp(maxY + k, 0, img.getHeight() - 1), c.getRGB());
+                }
+                // left and right ones
+                for (int i = minY; i <= maxY; i++) {
+                    img.setRGB(Utils.clamp(minX + k, 0, img.getWidth() - 1), i, c.getRGB());
+                    img.setRGB(Utils.clamp(maxX + k, 0, img.getWidth() - 1), i, c.getRGB());
+                }
             }
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ImageIO.write(img, "jpg", bos);

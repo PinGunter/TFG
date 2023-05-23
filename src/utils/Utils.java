@@ -121,4 +121,12 @@ public class Utils {
         pb.inheritIO().start().waitFor();
         return path + ".mp3";
     }
+
+    public static double clamp(double val, double min, double max) {
+        return Math.min(max, Math.max(min, val));
+    }
+
+    public static int clamp(int val, int min, int max) {
+        return Math.min(max, Math.max(min, val));
+    }
 }
