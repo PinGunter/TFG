@@ -201,8 +201,12 @@ public class TelegramAgent extends NotifierAgent {
                             } catch (UnreadableException e) {
                                 logger.error("Error while deserializing");
                             }
+                            if (onlineDevices.containsKey(cId.getName())) {
+                                notifyUsers(cId.getName() + " has updated its capabilities");
+                            } else {
+                                notifyUsers(cId.getName() + " has connected");
+                            }
                             onlineDevices.put(cId.getName(), cId.getCapabilities());
-                            notifyUsers(cId.getName() + " has connected");
                         }
                     }
                     case LOGOUT -> {

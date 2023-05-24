@@ -22,7 +22,7 @@ public class Camera implements WebcamMotionListener {
 
     int interval;
 
-    public Camera(boolean enable, Consumer<WebcamMotionEvent> onMotionEvent, int interval) {
+    public Camera(boolean enable, Consumer<WebcamMotionEvent> onMotionEvent, int interval) throws Exception {
         webcam = Webcam.getDefault();
         this.interval = interval;
         if (webcam != null) {
@@ -36,8 +36,12 @@ public class Camera implements WebcamMotionListener {
                 detector.addMotionListener(this);
                 detector.setPixelThreshold(50);
                 detector.start();
+            } else {
+                throw new Exception("Unable to open camera");
             }
 
+        } else {
+            throw new Exception("Unable to access camera");
         }
     }
 

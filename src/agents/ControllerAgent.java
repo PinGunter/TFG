@@ -180,6 +180,34 @@ public class ControllerAgent extends ClientAgent {
                     return AgentStatus.LOGOUT;
                 }
 
+                case ENDPOINT_LOGOUT -> {
+                    gui.setTextArea(sender.split("_")[0] + " has disconnected or was unable to start", new Color(250, 100, 100));
+                    sensors.remove(sender);
+                    actuators.remove(sender);
+
+                    if (sender.startsWith("CAMERA")) {
+                        capabilities.remove(Capabilities.CAMERA);
+                    } else if (sender.startsWith("SCREEN")) {
+                        capabilities.remove(Capabilities.SCREEN);
+                    } else if (sender.startsWith("SPEAKERS")) {
+                        capabilities.remove(Capabilities.SPEAKERS);
+                    } else if (sender.startsWith("MICROPHONE")) {
+                        capabilities.remove(Capabilities.MICROPHONE);
+                    } else if (sender.startsWith("BATTERY")) {
+                        capabilities.remove(Capabilities.BATTERY);
+                    }
+                    try {
+                        ACLMessage m = new ACLMessage(ACLMessage.INFORM);
+                        m.setProtocol(Protocols.ENDPOINT_LOGOUT.toString());
+                        m.setContentObject(capabilities);
+                        m.setSender(getAID());
+                        m.addReceiver(new AID(hub, AID.ISLOCALNAME));
+                        sendMsg(m);
+                    } catch (IOException e) {
+                        logger.error("Error serializing updated capabilities");
+                    }
+                }
+
             }
         }
         if (emergencies.size() > 0) {

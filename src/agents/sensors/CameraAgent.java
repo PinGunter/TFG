@@ -34,7 +34,18 @@ public class CameraAgent extends SensorAgent {
         } catch (Exception e) {
             motionDetectionEnabled = false;
         }
-        camera = new Camera(motionDetectionEnabled, this::onMotion, interval);
+        try {
+            camera = new Camera(motionDetectionEnabled, this::onMotion, interval);
+        } catch (Exception e) {
+            logger.error("Error opening camera, shutting down agent");
+            status = AgentStatus.END;
+            ACLMessage m = new ACLMessage(ACLMessage.INFORM);
+            m.setProtocol(Protocols.ENDPOINT_LOGOUT.toString());
+            m.setSender(getAID());
+            m.addReceiver(deviceController);
+            sendMsg(m);
+            logout();
+        }
     }
 
     @Override

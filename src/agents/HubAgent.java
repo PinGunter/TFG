@@ -208,6 +208,23 @@ public class HubAgent extends BaseAgent {
                         }
                     }
 
+                    case ENDPOINT_LOGOUT -> {
+                        if (msg.getPerformative() == ACLMessage.INFORM) {
+                            try {
+                                ArrayList<Capabilities> updated = (ArrayList<Capabilities>) msg.getContentObject();
+                                devices.put(msg.getSender().getLocalName(), updated);
+                                ACLMessage m = new ACLMessage(ACLMessage.INFORM);
+                                m.setProtocol(Protocols.CONTROLLER_LOGIN.toString()); /// reusing channels
+                                m.setContentObject(new ControllerID(sender, updated));
+                                m.setSender(getAID());
+                                notifiers.forEach(n -> m.addReceiver(new AID(n, AID.ISLOCALNAME)));
+                                sendMsg(m);
+                            } catch (UnreadableException | IOException e) {
+                                logger.error("Error forwarding updated capabilities");
+                            }
+                        }
+                    }
+
                 }
 
             }

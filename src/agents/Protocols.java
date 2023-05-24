@@ -10,6 +10,9 @@ public enum Protocols {
     LOGOUT("LOGOUT"),
     CONTROLLER_DISCONNECT("CONTROLLER_DISCONNECT"),
     REGISTER("REGISTER"),
+
+    ENDPOINT_LOGOUT("ENDPOINT_LOGOUT"),
+
     NULL("");
     private String name;
 

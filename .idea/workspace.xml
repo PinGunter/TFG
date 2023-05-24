@@ -9,10 +9,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="">
+    <list default="true" id="961b8a74-0179-48e0-8de7-ae0516b217fa" name="Changes" comment="jade script">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/ControllerAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/ControllerAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/HubAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/HubAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/Protocols.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/Protocols.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/notifiers/TelegramAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/agents/sensors/CameraAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/Utils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/device/camera/Camera.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/device/camera/Camera.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -168,10 +172,22 @@
       <workItem from="1684790756384" duration="619000" />
       <workItem from="1684859013868" duration="2532000" />
     </task>
+    <task id="LOCAL-00001" summary="jade script">
+      <created>1684866851779</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1684866851779</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="jade script" />
+    <option name="LAST_COMMIT_MESSAGE" value="jade script" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
