@@ -4,6 +4,9 @@ import com.sun.jna.Native;
 import com.sun.jna.Structure;
 import com.sun.jna.win32.StdCallLibrary;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Found at:
  * <a href="https://stackoverflow.com/questions/3434719/how-to-get-the-remaining-battery-life-in-a-windows-system">...</a>
@@ -19,6 +22,18 @@ public class WindowsAccessor implements BatteryAccessor {
             public byte Reserved1;
             public int BatteryLifeTime;
             public int BatteryFullLifeTime;
+
+            @Override
+            protected List<String> getFieldOrder() {
+                ArrayList<String> fields = new ArrayList<String>();
+                fields.add("ACLineStatus");
+                fields.add("BatteryFlag");
+                fields.add("BatteryLifePercent");
+                fields.add("Reserved1");
+                fields.add("BatteryLifeTime");
+                fields.add("BatteryFullLifeTime");
+                return fields;
+            }
 
             public String getACLineStatusString() {
                 switch (ACLineStatus) {
