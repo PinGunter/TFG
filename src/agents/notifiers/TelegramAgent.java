@@ -756,7 +756,8 @@ public class TelegramAgent extends NotifierAgent {
     private void showDeviceCapabilities(String device, List<Capabilities> capabilities) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (Capabilities cap : capabilities) {
-            buttons.add(InlineKeyboardButton.builder().text(cap.toString()).callbackData("devices/" + device + "/" + cap).build());
+            if (cap != Capabilities.BATTERY) // we don't really interact with the battery
+                buttons.add(InlineKeyboardButton.builder().text(cap.toString()).callbackData("devices/" + device + "/" + cap).build());
         }
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardBuilder = InlineKeyboardMarkup.builder();
         if (buttons.size() > 0) {
