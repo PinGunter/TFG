@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-public class Client extends JFrame {
+public class Client {
     private JTextField nameField;
+
+    private JFrame mainFrame;
     private JCheckBox cameraCheckBox;
     private JCheckBox microphoneCheckBox;
     private JCheckBox batteryCheckBox;
@@ -29,13 +31,13 @@ public class Client extends JFrame {
 
 
     public Client(boolean graphic, String[] args) {
-        super("CLIENT");
         if (graphic) {
-            setContentPane(mainPanel);
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            pack();
-            setSize(600, 400);
-            setVisible(true);
+            mainFrame = new JFrame("Client");
+            mainFrame.setContentPane(mainPanel);
+            mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            mainFrame.pack();
+            mainFrame.setSize(600, 400);
+            mainFrame.setVisible(true);
             startButton.addActionListener(this::onStartButton);
         } else {
             String host = "", pass = "", name = "";
@@ -109,7 +111,7 @@ public class Client extends JFrame {
         if (!user_pass.isEmpty() && !ip.isEmpty() && !name.isEmpty()) {
             try {
                 startClient(ip, pass, name, capabilitiesList, true);
-                setVisible(false);
+                mainFrame.setVisible(false);
             } catch (Exception e) {
                 errorArea.setText("Error launching agent.\n" + e.getMessage());
             }

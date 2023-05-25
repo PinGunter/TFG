@@ -1,8 +1,5 @@
 package launchers;
 
-// constructor sin paramentros
-// boot hostname, puerto
-// launchAgent con argumnentos
 
 import jade.core.MicroRuntime;
 import jade.core.Profile;
