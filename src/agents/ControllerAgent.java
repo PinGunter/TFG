@@ -37,7 +37,9 @@ public class ControllerAgent extends ClientAgent {
     @Override
     public void setup() {
         super.setup();
-        gui = new ControllerGUI(getLocalName(), (e) -> logout());
+        if ((boolean) getArguments()[2]) {
+            gui = new ControllerGUI(getLocalName(), (e) -> logout());
+        }
         status = AgentStatus.LOGIN;
         sensors = new ArrayList<>();
         actuators = new ArrayList<>();
@@ -86,16 +88,21 @@ public class ControllerAgent extends ClientAgent {
             case LOGOUT -> status = logout();
             case END -> exit = true;
         }
-        gui.setStatus(status.toString(), status == AgentStatus.WARNING ? new Color(255, 0, 0) : new Color(0, 0, 0));
+        if (gui != null)
+            gui.setStatus(status.toString(), status == AgentStatus.WARNING ? new Color(255, 0, 0) : new Color(0, 0, 0));
     }
 
     public AgentStatus login() {
         if (isFirstTime) {
-            gui.show();
+            if (gui != null) gui.show();
             timer.setTimeout(() -> {
                 if (status == AgentStatus.LOGIN) {
-                    gui.setStatus("LOGIN ERROR", new Color(255, 0, 0));
-                    gui.setTextArea("Couldn't connect to the HUB. Is the password correct?\nShutting down in 60 seconds", new Color(255, 0, 0));
+                    if (gui != null) {
+                        gui.setStatus("LOGIN ERROR", new Color(255, 0, 0));
+                        gui.setTextArea("Couldn't connect to the HUB. Is the password correct?\nShutting down in 60 seconds", new Color(255, 0, 0));
+                    } else {
+                        logger.error("LOGIN ERROR: Couldn't connect to the HUB. Is the password correct?\nShutting down in 60 seconds");
+                    }
                     ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
                     m.setProtocol(Protocols.LOGOUT.toString());
                     m.setSender(getAID());
@@ -181,7 +188,12 @@ public class ControllerAgent extends ClientAgent {
                 }
 
                 case ENDPOINT_LOGOUT -> {
-                    gui.setTextArea(sender.split("_")[0] + " has disconnected or was unable to start", new Color(250, 100, 100));
+                    if (gui != null) {
+
+                        gui.setTextArea(sender.split("_")[0] + " has disconnected or was unable to start", new Color(250, 100, 100));
+                    } else {
+                        logger.error(sender.split("_")[0] + " has disconnected or was unable to start");
+                    }
                     sensors.remove(sender);
                     actuators.remove(sender);
 

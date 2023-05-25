@@ -28,14 +28,67 @@ public class Client extends JFrame {
     private JPasswordField passField;
 
 
-    public Client() {
+    public Client(boolean graphic, String[] args) {
         super("CLIENT");
-        setContentPane(mainPanel);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        pack();
-        setSize(600, 400);
-        setVisible(true);
-        startButton.addActionListener(this::onStartButton);
+        if (graphic) {
+            setContentPane(mainPanel);
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            pack();
+            setSize(600, 400);
+            setVisible(true);
+            startButton.addActionListener(this::onStartButton);
+        } else {
+            String host = "", pass = "", name = "";
+            List<Capabilities> capabilities = new ArrayList<>();
+            for (int i = 0; i < args.length; ) {
+                if (args[i].equals("-host")) {
+                    host = args[++i];
+                    i++;
+                } else if (args[i].equals("-name")) {
+                    name = args[++i];
+                    i++;
+                } else if (args[i].equals("-pass")) {
+                    pass = Base64.getEncoder().encodeToString(args[++i].getBytes(StandardCharsets.UTF_8));
+                    i++;
+                } else if (args[i].equals("-cam")) {
+                    capabilities.add(Capabilities.CAMERA);
+                    i++;
+                } else if (args[i].equals("-micro")) {
+                    capabilities.add(Capabilities.MICROPHONE);
+                    i++;
+                } else if (args[i].equals("-batt")) {
+                    capabilities.add(Capabilities.BATTERY);
+                    i++;
+                } else if (args[i].equals("-screen")) {
+                    capabilities.add(Capabilities.SCREEN);
+                    i++;
+                } else if (args[i].equals("-speak")) {
+                    capabilities.add(Capabilities.SPEAKERS);
+                    i++;
+                } else {
+                    System.err.println("Invalid arguments. Launch the program like this:\njava -jar client.java -host <hostname> -pass <password> -name <name> [-cam] [-micro] [-batt] [-screen] [-speak]");
+                    System.exit(1);
+                }
+            }
+            try {
+                startClient(host, pass, name, capabilities, graphic);
+            } catch (Exception e) {
+                System.err.println("Error launching agent: " + e.getMessage());
+                System.exit(1);
+            }
+        }
+
+    }
+
+    private void startClient(String host, String pass, String name, List<Capabilities> capabilities, boolean graphics) throws Exception {
+        Object[] arguments = new Object[3];
+        arguments[0] = pass;
+        arguments[1] = capabilities;
+        arguments[2] = graphics;
+        JADELauncher boot = new JADELauncher();
+        boot.boot(host, 1099);
+        boot.launchAgent(name, ControllerAgent.class, arguments);
+        boot.waitAndShutdown();
     }
 
     private void onStartButton(ActionEvent event) {
@@ -53,29 +106,21 @@ public class Client extends JFrame {
         if (screenCheckBox.isSelected()) capabilitiesList.add(Capabilities.SCREEN);
         if (speakersCheckBox.isSelected()) capabilitiesList.add(Capabilities.SPEAKERS);
 
-        Object[] arguments = new Object[2];
-        arguments[0] = pass;
-        arguments[1] = capabilitiesList;
-
-        try {
-            if (!user_pass.isEmpty() && !ip.isEmpty() && !name.isEmpty()) {
-                JADELauncher boot = new JADELauncher();
-                boot.boot(ip, 1099);
-                boot.launchAgent(name, ControllerAgent.class, arguments);
+        if (!user_pass.isEmpty() && !ip.isEmpty() && !name.isEmpty()) {
+            try {
+                startClient(ip, pass, name, capabilitiesList, true);
                 setVisible(false);
-                boot.waitAndShutdown();
-            } else {
-                errorArea.setText("No field can be left blank");
+            } catch (Exception e) {
+                errorArea.setText("Error launching agent.\n" + e.getMessage());
             }
-
-        } catch (Exception e) {
-            errorArea.setText("ERROR: " + e.getMessage());
+        } else {
+            errorArea.setText("No field can be left blank");
         }
     }
 
     public static void main(String[] args) {
-        System.out.println("Welcome to the domotic alerts");
-        Client c = new Client();
+        System.out.println("Welcome to the domotic alerts system");
+        Client c = new Client(args.length == 0, args);
     }
 
 }
