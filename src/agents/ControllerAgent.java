@@ -189,7 +189,6 @@ public class ControllerAgent extends ClientAgent {
 
                 case ENDPOINT_LOGOUT -> {
                     if (gui != null) {
-
                         gui.setTextArea(sender.split("_")[0] + " has disconnected or was unable to start", new Color(250, 100, 100));
                     } else {
                         logger.error(sender.split("_")[0] + " has disconnected or was unable to start");
@@ -280,6 +279,21 @@ public class ControllerAgent extends ClientAgent {
                         sendMsg(informSensor);
                     }
 
+                } else if (response.getPerformative() == ACLMessage.REQUEST && response.getProtocol().equals(Protocols.WARNING_COMMAND.toString())) {
+                    try {
+                        Command c = (Command) response.getContentObject();
+                        String receiver = c.getTargetDevice() + "_" + getLocalName();
+                        if (actuators.contains(receiver) || sensors.contains(receiver)) {
+                            ACLMessage forward = new ACLMessage(ACLMessage.REQUEST);
+                            forward.setProtocol(Protocols.COMMAND.toString());
+                            forward.setSender(getAID());
+                            forward.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+                            forward.setContentObject(c);
+                            sendMsg(forward);
+                        }
+                    } catch (UnreadableException | IOException e) {
+                        logger.error("Error deserializing warning command");
+                    }
                 }
             } else if (sensors.contains(response.getSender().getLocalName())) { // another emergency
                 if (response.getPerformative() == ACLMessage.REQUEST && response.getProtocol().equals(Protocols.WARNING.toString())) {

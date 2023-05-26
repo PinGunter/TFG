@@ -31,7 +31,8 @@ public class HubAgent extends BaseAgent {
     private final int connectionStatusDelay = 10000;
     private final int connectionStatusPeriod = 60000;
 
-    HubGUI gui;
+    private boolean soundAlerts;
+    private HubGUI gui;
 
     @Override
     public void setup() {
@@ -45,6 +46,7 @@ public class HubAgent extends BaseAgent {
         devicesConnected = new HashMap<>();
         emergencies = new ArrayList<>();
         this.status = AgentStatus.LOGIN;
+        soundAlerts = true;
         timer.setInterval(new TimerTask() {
             @Override
             public void run() {
@@ -212,6 +214,7 @@ public class HubAgent extends BaseAgent {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
                             try {
                                 ArrayList<Capabilities> updated = (ArrayList<Capabilities>) msg.getContentObject();
+                                System.out.println("HUB:  updated capabilities" + updated);
                                 devices.put(msg.getSender().getLocalName(), updated);
                                 ACLMessage m = new ACLMessage(ACLMessage.INFORM);
                                 m.setProtocol(Protocols.CONTROLLER_LOGIN.toString()); /// reusing channels
@@ -242,6 +245,19 @@ public class HubAgent extends BaseAgent {
                     notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
                     sendMsg(m);
                     emergency.setStatus(EmergencyStatus.ALERTED);
+                    if (soundAlerts) {
+                        if (emergency.needsSound()) {
+                            logger.info("Playing alarm");
+                            List<String> speakers = devices.entrySet().stream().filter(e -> e.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
+                            System.out.println(speakers);
+                            ACLMessage s = new ACLMessage(ACLMessage.REQUEST);
+                            s.setProtocol(Protocols.WARNING_COMMAND.toString());
+                            s.setSender(getAID());
+                            s.setContentObject(new Command("ALARM", "SPEAKERS", ""));
+                            speakers.forEach(speak -> s.addReceiver(new AID(speak, AID.ISLOCALNAME)));
+                            sendMsg(s);
+                        }
+                    }
                     timer.setTimeout(() -> emergency.setStatus(EmergencyStatus.DISCOVERED), warningDelay); // we try to remind the user again
                 } catch (IOException e) {
                     logger.error("Error serializing");
@@ -269,12 +285,10 @@ public class HubAgent extends BaseAgent {
                             });
                             emergencies.clear();
                         } else {
-                            logger.info("Antes de procesarla");
                             Emergency emReceived = (Emergency) response.getContentObject();
                             ackEmergency(Utils.FindEmergencyByName(emergencies, emReceived.getMessage()));
                             System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
                             Utils.RemoveEmergency(emergencies, emReceived.getMessage());
-                            logger.info("Despues");
                             System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
                         }
                     } catch (IOException e) {

@@ -66,8 +66,8 @@ public class CameraAgent extends SensorAgent {
                 if (p.y < minY) minY = p.y;
                 if (p.y > maxY) maxY = p.y;
             }
-            // top and bottom lines
-            for (int k = -1; k <= 1; k++) {
+            for (int k = -1; k <= 1; k++) { // 3 pixels wide
+                // top and bottom lines
                 for (int i = minX; i <= maxX; i++) {
                     img.setRGB(i, Utils.clamp(minY + k, 0, img.getHeight() - 1), c.getRGB());
                     img.setRGB(i, Utils.clamp(maxY + k, 0, img.getHeight() - 1), c.getRGB());
@@ -80,7 +80,7 @@ public class CameraAgent extends SensorAgent {
             }
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ImageIO.write(img, "jpg", bos);
-            sendAlert(new Emergency(deviceController, getAID(), "Motion detected", "Motion", bos.toByteArray()));
+            sendAlert(new Emergency(deviceController, getAID(), "Motion detected", "Motion", bos.toByteArray(), true));
         } catch (IOException e) {
             System.err.println("Error writing img");
         }
@@ -109,14 +109,7 @@ public class CameraAgent extends SensorAgent {
                     } else if (c.getOrder().startsWith("burst")) {
                         int n = Integer.parseInt(c.getOrder().split(" ")[1]);
                         double interval = Double.parseDouble(c.getOrder().split(" ")[2]) * 1000;
-                        //TODO in the future send an acknowledged message to show that is running the command
                         ArrayList<BufferedImage> burst = camera.startBurst(n, interval);
-//                    ArrayList<byte[]> photos = new ArrayList<>(burst.size());
-//                    for (int i = 0; i < n; i++) {
-//                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//                        ImageIO.write(burst.get(i), "jpg", bos);
-//                        photos.add(bos.toByteArray());
-//                    }
                         byte[] gif = Utils.CreateGIF(burst, interval / 2);
                         c.setStatus(CommandStatus.DONE);
                         c.setResult(gif, "burst");

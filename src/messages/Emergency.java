@@ -14,6 +14,7 @@ public class Emergency implements Serializable {
 
     private String type;
 
+    private boolean needsSound;
 
     public Emergency(AID originDevice, AID originSensor, String message) {
         this.originDevice = originDevice;
@@ -21,6 +22,7 @@ public class Emergency implements Serializable {
         this.originSensor = originSensor;
         status = EmergencyStatus.DISCOVERED;
         type = "generic";
+        needsSound = false;
     }
 
     public Emergency(AID originDevice, AID originSensor, String message, String type, Serializable obj) {
@@ -30,11 +32,20 @@ public class Emergency implements Serializable {
         status = EmergencyStatus.DISCOVERED;
         this.type = type;
         this.object = obj;
+        needsSound = false;
     }
 
+    public Emergency(AID originDevice, AID originSensor, String message, String type, Serializable obj, boolean needsSound) {
+        this(originDevice, originSensor, message, type, obj);
+        this.needsSound = needsSound;
+    }
 
     public String getMessage() {
         return message;
+    }
+
+    public boolean needsSound() {
+        return needsSound;
     }
 
     public AID getOriginDevice() {
