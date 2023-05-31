@@ -61,7 +61,7 @@ public class SpeakerAgent extends ActuatorAgent {
                         try {
                             // notify we are in progress of playing
                             c.setStatus(CommandStatus.IN_PROGRESS);
-                            c.setResult(deviceController.getLocalName() + " Started playing audio", "audio");
+                            c.setResult(deviceController.getLocalName() + " Started playing audio", "msg");
                             ACLMessage res = new ACLMessage(ACLMessage.INFORM);
                             res.setProtocol(Protocols.COMMAND.toString());
                             res.setSender(getAID());
