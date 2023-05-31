@@ -203,6 +203,7 @@ public class TelegramAgent extends NotifierAgent {
                             }
                             if (onlineDevices.containsKey(cId.getName())) {
                                 notifyUsers(cId.getName() + " has updated its capabilities");
+                                System.out.println(cId.getCapabilities());
                             } else {
                                 notifyUsers(cId.getName() + " has connected");
                             }
@@ -558,6 +559,8 @@ public class TelegramAgent extends NotifierAgent {
                                 sendCommand(new Command("photo", device, items.get(1)));
                             } else if (items.get(2).equals("toggleMotion")) {
                                 sendCommand(new Command("toggleMotion", device, items.get(1)));
+                                newKb.setReplyMarkup(returnMainMenu);
+                                newTxt.setText("Motion detection toggled");
                             } else if (items.get(2).equals("burst")) {
                                 System.out.println(fullInputPath);
                                 System.out.println(items);
@@ -664,14 +667,34 @@ public class TelegramAgent extends NotifierAgent {
         // the root
         if (items.size() == 1) {
             InlineKeyboardButton maxPerPageBtn = InlineKeyboardButton.builder().text("Page limit").callbackData("settings/pageLimit").build();
-            InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.builder().keyboardRow(List.of(maxPerPageBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
+            InlineKeyboardButton soundAlertsBtn = InlineKeyboardButton.builder().text("Sound Alerts").callbackData("settings/soundAlerts").build();
+            InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.builder().keyboardRow(List.of(maxPerPageBtn)).keyboardRow(List.of(soundAlertsBtn)).keyboardRow(List.of(returnMainMenuBtn)).build();
             newKb.setReplyMarkup(keyboardMarkup);
         } else {
-            switch (items.get(1)) {
-                case "pageLimit" -> {
-                    // ideally would be set using buttons, but it's too complex
-                    newTxt.setText("Current page limit is " + pageLimit + "\n" + Emoji.NERD + Emoji.FINGER_UP + "Change it with /setpagelimit <newLimit>");
+            if (items.size() == 2) {
+                switch (items.get(1)) {
+                    case "pageLimit" -> {
+                        // ideally would be set using buttons, but it's too complex
+                        newTxt.setText("Current page limit is " + pageLimit + "\n" + Emoji.NERD + Emoji.FINGER_UP + "Change it with /setpagelimit <newLimit>");
+                        newKb.setReplyMarkup(returnMainMenu);
+                    }
+                    case "soundAlerts" -> {
+                        newTxt.setText("Enable automatic sound alerts?");
+                        InlineKeyboardButton enable = InlineKeyboardButton.builder().text("Enable").callbackData("settings/soundAlerts/enable").build();
+                        InlineKeyboardButton disable = InlineKeyboardButton.builder().text("Disable").callbackData("settings/soundAlerts/disable").build();
+                        InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.builder().keyboardRow(List.of(enable)).keyboardRow(List.of(disable)).keyboardRow(List.of(returnMainMenuBtn)).build();
+                        newKb.setReplyMarkup(keyboardMarkup);
+                    }
+                }
+            } else if (items.size() == 3) {
+                if (items.get(2).equals("enable")) {
+                    newTxt.setText("Sound alerts enabled");
                     newKb.setReplyMarkup(returnMainMenu);
+                    sendHub(ACLMessage.REQUEST, "enable", Protocols.SETTINGS.toString());
+                } else {
+                    newTxt.setText("Sound alerts disabled");
+                    newKb.setReplyMarkup(returnMainMenu);
+                    sendHub(ACLMessage.REQUEST, "disable", Protocols.SETTINGS.toString());
                 }
             }
         }

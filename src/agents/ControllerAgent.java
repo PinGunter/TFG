@@ -183,6 +183,23 @@ public class ControllerAgent extends ClientAgent {
                         if (em != null) emergencies.add(em);
                     }
                 }
+
+                case WARNING_COMMAND -> {
+                    try {
+                        Command c = (Command) msg.getContentObject();
+                        String receiver = c.getTargetDevice() + "_" + getLocalName();
+                        if (actuators.contains(receiver) || sensors.contains(receiver)) {
+                            ACLMessage forward = new ACLMessage(ACLMessage.REQUEST);
+                            forward.setProtocol(Protocols.COMMAND.toString());
+                            forward.setSender(getAID());
+                            forward.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+                            forward.setContentObject(c);
+                            sendMsg(forward);
+                        }
+                    } catch (UnreadableException | IOException e) {
+                        logger.error("Error deserializing warning command");
+                    }
+                }
                 case LOGOUT -> {
                     return AgentStatus.LOGOUT;
                 }

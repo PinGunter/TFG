@@ -163,8 +163,10 @@ public class HubAgent extends BaseAgent {
                     case LOGOUT -> {
                         logoutDevices();
                         return AgentStatus.LOGOUT;
-
                     }
+
+                    case SETTINGS -> soundAlerts = msg.getContent().equals("enable");
+
                 }
             }
             // from some device
@@ -189,7 +191,23 @@ public class HubAgent extends BaseAgent {
                         } catch (UnreadableException e) {
                             logger.error("Error deserializing");
                         }
+
                         if (em != null) {
+                            if (em.needsSound()) {
+                                try {
+                                    List<String> speakers = devices.entrySet().stream().filter(e -> e.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
+                                    System.out.println(speakers);
+                                    ACLMessage s = new ACLMessage(ACLMessage.REQUEST);
+                                    s.setProtocol(Protocols.WARNING_COMMAND.toString());
+                                    s.setSender(getAID());
+                                    s.setContentObject(new Command("ALARM", "SPEAKERS", ""));
+                                    speakers.forEach(speak -> s.addReceiver(new AID(speak, AID.ISLOCALNAME)));
+                                    sendMsg(s);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+
+                            }
                             emergencies.add(em);
                         }
                         return AgentStatus.WARNING;
@@ -245,19 +263,6 @@ public class HubAgent extends BaseAgent {
                     notifiers.forEach(notifier -> m.addReceiver(new AID(notifier, AID.ISLOCALNAME)));
                     sendMsg(m);
                     emergency.setStatus(EmergencyStatus.ALERTED);
-                    if (soundAlerts) {
-                        if (emergency.needsSound()) {
-                            logger.info("Playing alarm");
-                            List<String> speakers = devices.entrySet().stream().filter(e -> e.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
-                            System.out.println(speakers);
-                            ACLMessage s = new ACLMessage(ACLMessage.REQUEST);
-                            s.setProtocol(Protocols.WARNING_COMMAND.toString());
-                            s.setSender(getAID());
-                            s.setContentObject(new Command("ALARM", "SPEAKERS", ""));
-                            speakers.forEach(speak -> s.addReceiver(new AID(speak, AID.ISLOCALNAME)));
-                            sendMsg(s);
-                        }
-                    }
                     timer.setTimeout(() -> emergency.setStatus(EmergencyStatus.DISCOVERED), warningDelay); // we try to remind the user again
                 } catch (IOException e) {
                     logger.error("Error serializing");
