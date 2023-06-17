@@ -193,7 +193,7 @@ public class HubAgent extends BaseAgent {
                         }
 
                         if (em != null) {
-                            if (em.needsSound()) {
+                            if (em.needsSound() && soundAlerts) {
                                 try {
                                     List<String> speakers = devices.entrySet().stream().filter(e -> e.getValue().contains(Capabilities.SPEAKERS)).map(Map.Entry::getKey).toList();
                                     System.out.println(speakers);
