@@ -114,12 +114,12 @@ public class Utils {
         Files.write(Path.of(path), encrypted);
     }
 
-    public static String ToMP3(String path) throws IOException, InterruptedException {
+    public static String toWav(String path) throws IOException, InterruptedException {
         String ffmpeg = Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
-        ProcessBuilder pb = new ProcessBuilder(ffmpeg, "-i", path, path + ".mp3");
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg, "-i", path, path + ".wav");
         System.out.println("CONVIRTIENDO");
         pb.inheritIO().start().waitFor();
-        return path + ".mp3";
+        return path + ".wav";
     }
 
     public static double clamp(double val, double min, double max) {

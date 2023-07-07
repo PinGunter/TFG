@@ -193,6 +193,7 @@ public class TelegramAgent extends NotifierAgent {
                         }
 
                     }
+                    case NOTIFY_USER -> notifyUsers(msg.getContent());
                     case CONTROLLER_LOGIN -> {
                         if (msg.getPerformative() == ACLMessage.INFORM) {
                             ControllerID cId = new ControllerID("", null);

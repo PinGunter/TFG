@@ -295,6 +295,13 @@ public class HubAgent extends BaseAgent {
                             System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
                             Utils.RemoveEmergency(emergencies, emReceived.getMessage());
                             System.out.println(emergencies.stream().map(Emergency::getMessage).toList());
+                            if (emReceived.getOriginSensor().getLocalName().contains("BATTERY") && !notifiers.contains(response.getSender().getLocalName())) {
+                                ACLMessage finished = new ACLMessage(ACLMessage.INFORM);
+                                finished.setContent("Power has come back");
+                                finished.setProtocol(Protocols.NOTIFY_USER.toString());
+                                notifiers.forEach(n -> finished.addReceiver(new AID(n, AID.ISLOCALNAME)));
+                                sendMsg(finished);
+                            }
                         }
                     } catch (IOException e) {
                         logger.error("error serializing");

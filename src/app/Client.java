@@ -68,7 +68,7 @@ public class Client {
                     capabilities.add(Capabilities.SPEAKERS);
                     i++;
                 } else {
-                    System.err.println("Invalid arguments. Launch the program like this:\njava -jar client.java -host <hostname> -pass <password> -name <name> [-cam] [-micro] [-batt] [-screen] [-speak]");
+                    System.err.println("Invalid arguments. Launch the program like this:\njava -jar controller.java -host <hostname> -pass <password> -name <name> [-cam] [-micro] [-batt] [-screen] [-speak]");
                     System.exit(1);
                 }
             }
