@@ -30,3 +30,13 @@ bin/
 
 #environment
 .env
+
+# temp files for audio and photos
+temp/
+
+data/notifiers/chatIds.data
+
+# super secret stuff
+doJade/
+src/tools
+src/appboot

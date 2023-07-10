@@ -3,25 +3,45 @@ package notifiers;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.*;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class TelegramBot extends TelegramLongPollingBot {
     Consumer<Update> onUpdate;
 
+    Set<Long> chatIds;
 
+    private boolean isOpen;
     String name, token;
 
-    public TelegramBot(Consumer<Update> onUpdate) {
+    public TelegramBot(Consumer<Update> onUpdate, Set<Long> chatIds) {
         this.onUpdate = onUpdate;
+        this.chatIds = chatIds;
+        isOpen = false;
         Dotenv dotenv = Dotenv.load();
         name = dotenv.get("TELEGRAM_BOT_NAME");
         token = dotenv.get("TELEGRAM_BOT_TOKEN");
+    }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setChatIds(Set<Long> newChatIds) {
+        chatIds = newChatIds;
     }
 
     @Override
@@ -45,6 +65,38 @@ public class TelegramBot extends TelegramLongPollingBot {
                 .text(what)
                 .build();
         myExecute(sm);
+    }
+
+    public void sendVoiceMsg(Long who, InputFile audio) {
+        SendVoice sendVoice = new SendVoice(who.toString(), audio);
+        myExecute(sendVoice);
+    }
+
+    public void sendPhoto(Long who, InputFile photo) {
+        SendPhoto sendPhoto = new SendPhoto(who.toString(), photo);
+        myExecute(sendPhoto);
+    }
+
+    public void sendAnimation(Long who, InputFile animation) {
+        SendAnimation sendAnimation = new SendAnimation(who.toString(), animation);
+        myExecute(sendAnimation);
+    }
+
+    public void sendMediaGroup(Long who, List<InputMedia> media) {
+        SendMediaGroup sendMediaGroup = new SendMediaGroup(who.toString(), media);
+        myExecute(sendMediaGroup);
+    }
+
+    public void sendVoiceMsgKbMarkup(Long who, InputFile audio, InlineKeyboardMarkup kb) {
+        SendVoice sendVoice = new SendVoice(who.toString(), audio);
+        sendVoice.setReplyMarkup(kb);
+        myExecute(sendVoice);
+    }
+
+    public void sendPhotoKbMarkup(Long who, InputFile photo, InlineKeyboardMarkup kb) {
+        SendPhoto sendPhoto = new SendPhoto(who.toString(), photo);
+        sendPhoto.setReplyMarkup(kb);
+        myExecute(sendPhoto);
     }
 
     public void sendWithReplyMenu(Long who, String what, InlineKeyboardMarkup kb) {
@@ -76,5 +128,36 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    public void myExecute(SendVoice method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendAnimation method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendPhoto method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void myExecute(SendMediaGroup method) {
+        try {
+            this.execute(method);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
+        }
+    }
 
 }

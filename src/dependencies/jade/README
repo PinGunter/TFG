@@ -150,7 +150,7 @@ at the Apache web site: <http://jakarta.apache.org/>.
 =================================
 Just type
 ant jade
-you run ant on build.xml file in the root directory.
+you app ant on build.xml file in the root directory.
 You will end up with all JADE classes in a classes subdirectory. You can add 
 that directory to your CLASSPATH and make sure that everything is OK by 
 running JADE, as described in the previous section.
@@ -162,7 +162,7 @@ ant lib
 This will remove the content of the classes directory and will create some 
 JAR files in the lib directory. These JAR files are just the same you get 
 from the binary distribution. See section 5.3 for a description on how to 
-run JADE when you have built the JAR files. 
+app JADE when you have built the JAR files.
 NOTE: jade/lib/Base64.jar is only needed if you want to use the support for JADE 
       serialization and trasmitting sequences of bytes within an ACLMessage. In all
       other cases, it is not necessary adding it to CLASSPATH .

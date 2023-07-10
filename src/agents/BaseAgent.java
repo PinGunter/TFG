@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.MicroRuntime;
 import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -10,12 +11,24 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
 import utils.Logger;
+import utils.Timeout;
+import utils.Utils;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+
 
 /**
  * Base Class for our agents. It's heavily inspired by Luis Castillo's LARVABaseAgent
@@ -28,6 +41,8 @@ import java.util.Scanner;
 public class BaseAgent extends Agent {
     protected AgentStatus status;
     protected Logger logger;
+    protected Timeout timer;
+
     protected final long WAITANSWERMS = 5000;
 
     public Behaviour defaultBehaviour;
@@ -40,12 +55,31 @@ public class BaseAgent extends Agent {
 
     protected boolean isRequesting = false;
 
+    protected String cryptKey;
+
+    protected boolean isMicroBoot;
+
     @Override
     public void setup() {
         super.setup();
+        timer = new Timeout();
         logger = new Logger();
         logger.setAgentName(getLocalName());
         this.setDefaultBehaviour();
+        cryptKey = (String) getArguments()[0];
+        try {
+            File settings = new File("data/settings/micro.txt");
+            Scanner scanner = new Scanner(settings);
+            String isMicroString = "";
+            while (scanner.hasNext()) {
+                isMicroString = scanner.nextLine();
+            }
+            scanner.close();
+            isMicroBoot = isMicroString.equals("true");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -80,8 +114,8 @@ public class BaseAgent extends Agent {
         try {
             runnable.run();
         } catch (Exception e) {
-            logger.error(e.getMessage());
-            exit = true;
+            logger.error("Excepcion no capturada " + e.getMessage());
+//            exit = true;
         }
     }
 
@@ -259,6 +293,15 @@ public class BaseAgent extends Agent {
     }
 
     public void sendMsg(ACLMessage msg) {
+        if (msg.getByteSequenceContent() != null) {
+            try {
+                byte[] encrypted = Utils.EncryptObj(msg.getByteSequenceContent(), cryptKey);
+                msg.setByteSequenceContent(encrypted);
+            } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IOException |
+                     IllegalBlockSizeException | BadPaddingException e) {
+                logger.error("Error while encrypting");
+            }
+        }
         logger.message(prettyPrint(msg));
         send(msg);
     }
@@ -266,7 +309,16 @@ public class BaseAgent extends Agent {
     public ACLMessage receiveMsg() {
         ACLMessage msg = receive();
         if (msg != null) {
-            logger.message(prettyPrint(msg));
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
         }
         return msg;
     }
@@ -274,7 +326,16 @@ public class BaseAgent extends Agent {
     public ACLMessage receiveMsg(MessageTemplate template) {
         ACLMessage msg = receive(template);
         if (msg != null) {
-            logger.message(prettyPrint(msg));
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
         }
         return msg;
     }
@@ -282,6 +343,16 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg() {
         ACLMessage msg = blockingReceive();
         if (msg != null) {
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
             logger.message(prettyPrint(msg));
         }
         return msg;
@@ -290,7 +361,16 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(int milis) {
         ACLMessage msg = blockingReceive(milis);
         if (msg != null) {
-            logger.message(prettyPrint(msg));
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
         }
         return msg;
     }
@@ -298,7 +378,16 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(MessageTemplate template) {
         ACLMessage msg = blockingReceive(template);
         if (msg != null) {
-            logger.message(prettyPrint(msg));
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
         }
         return msg;
     }
@@ -306,7 +395,16 @@ public class BaseAgent extends Agent {
     public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
         ACLMessage msg = blockingReceive(template, milis);
         if (msg != null) {
-            logger.message(prettyPrint(msg));
+            if (msg.getByteSequenceContent() != null) {
+                try {
+                    logger.message(prettyPrint(msg));
+                    byte[] decrypted = Utils.DecryptObj(msg.getByteSequenceContent(), cryptKey);
+                    msg.setByteSequenceContent(decrypted);
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                         IllegalBlockSizeException | BadPaddingException e) {
+                    logger.error("Error while decrypting");
+                }
+            }
         }
         return msg;
     }
@@ -323,5 +421,18 @@ public class BaseAgent extends Agent {
         res += " @" + msg.getProtocol() + " || RW:" + msg.getReplyWith() + " || IRT:" + msg.getInReplyTo();
         return res;
     }
-    
+
+    public synchronized void launchSubAgent(String name, Class c, Object[] args) {
+        try {
+            if (isMicroBoot) {
+                MicroRuntime.startAgent(name, c.getName(), args);
+            } else {
+                AgentController ag = getContainerController().createNewAgent(name, c.getName(), args);
+                ag.start();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
 }

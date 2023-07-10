@@ -37,7 +37,7 @@ public class ClientAgent extends BaseAgent {
             logger.info("Waiting for hub");
             helloHub = blockingReceiveMsg(5000);
             if (helloHub != null) {
-                if (helloHub.getPerformative() == ACLMessage.INFORM) {
+                if (helloHub.getPerformative() == ACLMessage.INFORM && helloHub.getSender().getLocalName().equals("HUB")) {
                     logger.info("Greeted Hub");
                     return AgentStatus.IDLE;
                 }
@@ -46,12 +46,12 @@ public class ClientAgent extends BaseAgent {
         return AgentStatus.LOGIN;
     }
 
-    public void goodBye(String protocol) {
+    public void goodBye() {
         ACLMessage bye = new ACLMessage();
-        bye.setPerformative(ACLMessage.REQUEST); //TODO esta bien esta performativa?
+        bye.setPerformative(ACLMessage.REQUEST);
         bye.setSender(getAID());
         bye.setContent("Bye bye!");
-        bye.setProtocol(protocol);
+        bye.setProtocol(Protocols.LOGOUT.toString());
         bye.addReceiver(new AID(hub, AID.ISLOCALNAME));
         sendMsg(bye);
     }
@@ -81,56 +81,38 @@ public class ClientAgent extends BaseAgent {
 
     @Override
     public ACLMessage receiveMsg() {
-        ACLMessage msg = receive();
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.receiveMsg();
         return confirmConnection(msg);
     }
 
     @Override
     public ACLMessage receiveMsg(MessageTemplate template) {
-        ACLMessage msg = receive(template);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.receiveMsg(template);
         return confirmConnection(msg);
     }
 
     @Override
     public ACLMessage blockingReceiveMsg() {
-        ACLMessage msg = blockingReceive();
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg();
         return confirmConnection(msg);
     }
 
 
     @Override
     public ACLMessage blockingReceiveMsg(int milis) {
-        ACLMessage msg = blockingReceive(milis);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg(milis);
         return confirmConnection(msg);
     }
 
     @Override
     public ACLMessage blockingReceiveMsg(MessageTemplate template) {
-        ACLMessage msg = blockingReceive(template);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg(template);
         return confirmConnection(msg);
     }
 
     @Override
     public ACLMessage blockingReceiveMsg(MessageTemplate template, int milis) {
-        ACLMessage msg = blockingReceive(template, milis);
-        if (msg != null) {
-            logger.message(prettyPrint(msg));
-        }
+        ACLMessage msg = super.blockingReceiveMsg(template, milis);
         return confirmConnection(msg);
     }
 }
