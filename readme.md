@@ -24,4 +24,4 @@ Uno de los puntos clave del trabajo es el software libre. Este proyecto es libre
 
 
 
-### [Manual de usuario](https://github.com/PinGunter/TFG/docs/instalacion.md)
+### [Manual de usuario](https://github.com/PinGunter/TFG/blob/main/docs/instalacion.md)
